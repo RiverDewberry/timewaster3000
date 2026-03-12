@@ -21,6 +21,7 @@ class Player
         this.shotDelayTimer = 0;
 
         this.health = 15;
+        this.tookDamage = false;
 
         this.state = playerStates.move;
 
@@ -59,6 +60,7 @@ class Player
             this.deltaY = 0;
         }
 
+        this.tookDamage = false;
         for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
         {
             if (this.gameObject.collidesWith(
@@ -71,7 +73,9 @@ class Player
         }
 
         if (this.health < 15)
-            this.health += 0.0025;
+        {
+            this.health += 0.001;
+        }
         else this.health = 15;
 
         this.gameObject.update(ctx, this);
@@ -79,6 +83,7 @@ class Player
 
     takeDamage(amount)
     {
+        this.tookDamage = true;
         this.health -= amount;
         if (this.health <= 0)
         {
@@ -222,13 +227,22 @@ class Player
 
         if (data.state != playerStates.dash)
         {
-            ctx.fillStyle = "rgb(" + (data.health * 0x11) + ", 0, 0)";
+            ctx.fillStyle = "Black";
             ctx.fillRect(
                 data.gameObject.x,
                 data.gameObject.y,
                 data.gameObject.width,
                 data.gameObject.height
             );
+            
+            ctx.fillStyle = "Red";
+            ctx.fillRect(
+                data.gameObject.x + data.gameObject.height * (0.5 - data.health / 30),
+                data.gameObject.y + data.gameObject.width * (0.5 - data.health / 30),
+                data.gameObject.width * (data.health / 15),
+                data.gameObject.height * (data.health / 15)
+            );
+
         } else {
             ctx.strokeStyle = "rgb(" + Math.round(data.health * 10 + 105) + ", 105, 105)";
             ctx.lineWidth = 8;

@@ -1,3 +1,5 @@
+const enemyTypes = {basic: 0, archer: 1, projectile: 2};
+
 class EnemySpawner
 {
     constructor(gameState)
@@ -55,19 +57,23 @@ class EnemySpawner
             else this.spawnY = -50;
         }
 
-        new BasicEnemy(this.gameState, 5, spawnX, spawnY, 10, 10, 1);
+        new BasicEnemy(this.gameState, spawnX, spawnY, 10, 10, 5, 1, 1);
     }
 
 }
 
 class BasicEnemy
 {
-    constructor(gameState, health, x, y, width, height, damage)
+    constructor(gameState, x, y, width, height, health, damage, power)
     {
         this.gameState = gameState;
-        
+     
+        this.power = power;
+        this.type = enemyTypes.basic;
         this.health = health;
         this.damage = damage;
+        this.maxSpeed = 3;
+        this.acceleration = 1;
 
         this.gameObject = new GameObject(
             x, y, width, height, this.draw
@@ -88,21 +94,41 @@ class BasicEnemy
         if (this.health < 0) return;
         this.collideWithBullets();
 
+        this.mergeWithBasicEnemies();
+
         this.gameObject.update(ctx, this);
     }
 
     move()
     {
         let player = this.gameState.gameData.player;
-        this.deltaX += (player.gameObject.x > this.gameObject.x) ? 0.1 : -0.1;
-        this.deltaY += (player.gameObject.y > this.gameObject.y) ? 0.1 : -0.1;
+
+        let playerCenterX = (player.gameObject.x + player.gameObject.width * 0.5);
+        let playerCenterY = (player.gameObject.y + player.gameObject.height * 0.5);
+
+        let enemyCenterX = (this.gameObject.x + this.gameObject.width * 0.5);
+        let enemyCenterY = (this.gameObject.y + this.gameObject.height * 0.5);
+
+        this.deltaX += this.acceleration * (playerCenterX > enemyCenterX) ? 0.1 : -0.1;
+        this.deltaY += this.acceleration * (playerCenterY > enemyCenterY) ? 0.1 : -0.1;
 
         let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
 
-        if (velocityMag > 3)
+        if ((enemyCenterX + this.deltaX > playerCenterX) != (this.deltaX < 0))
+            this.deltaX *= 1 - (this.power - 1) * 0.005;
+
+        if ((enemyCenterY + this.deltaY > playerCenterY) != (this.deltaY < 0))
+            this.deltaY *= 1 - (this.power - 1) * 0.005;
+
+        let newSpeed = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        
+        this.deltaX /= newSpeed / velocityMag;
+        this.deltaY /= newSpeed / velocityMag;
+
+        if (velocityMag > this.maxSpeed)
         {
-            this.deltaX /= velocityMag * 0.33;
-            this.deltaY /= velocityMag * 0.33;
+            this.deltaX /= velocityMag / this.maxSpeed;
+            this.deltaY /= velocityMag / this.maxSpeed;
         }
 
         this.collideWithDashlines();
@@ -114,6 +140,7 @@ class BasicEnemy
     killEnemy()
     {
         this.kill = true;
+        this.health = 0;
         for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
         {
             if (this.gameState.gameData.enemies[i].id == this.id)
@@ -175,6 +202,43 @@ class BasicEnemy
                 return;
             }
         }
+    }
+
+    mergeWithBasicEnemies()
+    {
+        if (this.health == 0) return;
+        for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
+        {
+            if (
+                this.gameObject.collidesWith(
+                    this.gameState.gameData.enemies[i].gameObject
+                ) && (this.gameState.gameData.enemies[i].id != this.id) &&
+                (this.gameState.gameData.enemies[i].type == enemyTypes.basic)
+            )
+            {
+                
+                if(this.power > this.gameState.gameData.enemies[i].power)
+                {
+                    this.addPower(this.gameState.gameData.enemies[i]);
+                    this.gameState.gameData.enemies[i].killEnemy();
+                } else {
+                    this.gameState.gameData.enemies[i].addPower(this);
+                    this.killEnemy();
+                }
+            }
+        }
+    }
+
+    addPower(enemy)
+    {
+        this.power += enemy.power;
+        this.gameObject.x -= enemy.power * 0.5;
+        this.gameObject.y -= enemy.power * 0.5;
+        this.gameObject.width += enemy.power;
+        this.gameObject.height += enemy.power;
+        this.health += enemy.health;
+        this.damage += enemy.power * 1;
+        this.maxSpeed = this.power * 0.1 + 2.99;
     }
 
     draw(ctx, data)

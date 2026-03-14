@@ -57,84 +57,29 @@ class EnemySpawner
             else this.spawnY = -50;
         }
 
-        new BasicEnemy(this.gameState, spawnX, spawnY, 10, 10, 5, 1, 1);
+        new BasicEnemy(this.gameState, spawnX, spawnY, 10, 10);
     }
 
 }
 
-class BasicEnemy
+class Enemy
 {
-    constructor(gameState, x, y, width, height, health, damage, power)
+    constructor(gameState, x, y, width, height, health, damage, type)
     {
         this.gameState = gameState;
      
-        this.power = power;
-        this.type = enemyTypes.basic;
+        this.type = type;
         this.health = health;
         this.damage = damage;
-        this.maxSpeed = 3;
-        this.acceleration = 1;
+        
+        this.stunned = false;
 
         this.gameObject = new GameObject(
             x, y, width, height, this.draw
         );
 
-        this.deltaX = 0;
-        this.deltaY = 0;
-        this.stunned = false;
-
         this.gameState.gameData.enemies.push(this);
         gameState.addGameObject(this, 2);
-    }
-
-    update(ctx)
-    {
-        this.move();
-
-        if (this.health < 0) return;
-        this.collideWithBullets();
-
-        this.mergeWithBasicEnemies();
-
-        this.gameObject.update(ctx, this);
-    }
-
-    move()
-    {
-        let player = this.gameState.gameData.player;
-
-        let playerCenterX = (player.gameObject.x + player.gameObject.width * 0.5);
-        let playerCenterY = (player.gameObject.y + player.gameObject.height * 0.5);
-
-        let enemyCenterX = (this.gameObject.x + this.gameObject.width * 0.5);
-        let enemyCenterY = (this.gameObject.y + this.gameObject.height * 0.5);
-
-        this.deltaX += this.acceleration * (playerCenterX > enemyCenterX) ? 0.1 : -0.1;
-        this.deltaY += this.acceleration * (playerCenterY > enemyCenterY) ? 0.1 : -0.1;
-
-        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
-
-        if ((enemyCenterX + this.deltaX > playerCenterX) != (this.deltaX < 0))
-            this.deltaX *= 1 - (this.power - 1) * 0.005;
-
-        if ((enemyCenterY + this.deltaY > playerCenterY) != (this.deltaY < 0))
-            this.deltaY *= 1 - (this.power - 1) * 0.005;
-
-        let newSpeed = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
-        
-        this.deltaX /= newSpeed / velocityMag;
-        this.deltaY /= newSpeed / velocityMag;
-
-        if (velocityMag > this.maxSpeed)
-        {
-            this.deltaX /= velocityMag / this.maxSpeed;
-            this.deltaY /= velocityMag / this.maxSpeed;
-        }
-
-        this.collideWithDashlines();
-
-        this.gameObject.x += this.deltaX;
-        this.gameObject.y += this.deltaY;
     }
 
     killEnemy()
@@ -196,12 +141,84 @@ class BasicEnemy
         {
             if (this.gameObject.collidesWith(this.gameState.gameData.dashlines[i].gameObject))
             {
-                this.deltaX = 0;
-                this.deltaY = 0;
                 this.stunned = true;
                 return;
             }
         }
+    }
+
+    canDamagePlayer(player)
+    {
+        return !((player.state == playerStates.dash) || this.stunned);
+    }
+}
+
+class BasicEnemy extends Enemy
+{
+    constructor(gameState, x, y, width, height)
+    {
+        super(gameState, x, y, width, height, 5, 1, enemyTypes.basic)
+        this.gameState = gameState;
+     
+        this.power = 1;
+        this.maxSpeed = 3;
+        this.acceleration = 1;
+
+        this.deltaX = 0;
+        this.deltaY = 0;
+    }
+
+    move()
+    {
+        let player = this.gameState.gameData.player;
+
+        let playerCenterX = (player.gameObject.x + player.gameObject.width * 0.5);
+        let playerCenterY = (player.gameObject.y + player.gameObject.height * 0.5);
+
+        let enemyCenterX = (this.gameObject.x + this.gameObject.width * 0.5);
+        let enemyCenterY = (this.gameObject.y + this.gameObject.height * 0.5);
+
+        this.deltaX += this.acceleration * (playerCenterX > enemyCenterX) ? 0.1 : -0.1;
+        this.deltaY += this.acceleration * (playerCenterY > enemyCenterY) ? 0.1 : -0.1;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+
+        if ((enemyCenterX + this.deltaX > playerCenterX) != (this.deltaX < 0))
+            this.deltaX *= 1 - (this.power - 1) * 0.005;
+
+        if ((enemyCenterY + this.deltaY > playerCenterY) != (this.deltaY < 0))
+            this.deltaY *= 1 - (this.power - 1) * 0.005;
+
+        let newSpeed = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        
+        this.deltaX /= newSpeed / velocityMag;
+        this.deltaY /= newSpeed / velocityMag;
+
+        if (velocityMag > this.maxSpeed)
+        {
+            this.deltaX /= velocityMag / this.maxSpeed;
+            this.deltaY /= velocityMag / this.maxSpeed;
+        }
+
+        this.collideWithDashlines();
+
+        if (this.stunned == false)
+        {
+            this.gameObject.x += this.deltaX;
+            this.gameObject.y += this.deltaY;
+        }
+    }
+
+    update(ctx)
+    {
+        this.move();
+
+        if (this.health < 0) return;
+        this.collideWithBullets();
+
+        this.mergeWithBasicEnemies();
+
+        this.gameObject.update(ctx, this);
     }
 
     mergeWithBasicEnemies()
@@ -232,10 +249,10 @@ class BasicEnemy
     addPower(enemy)
     {
         this.power += enemy.power;
-        this.gameObject.x -= enemy.power * 0.5;
-        this.gameObject.y -= enemy.power * 0.5;
-        this.gameObject.width += enemy.power;
-        this.gameObject.height += enemy.power;
+        this.gameObject.x -= enemy.power;
+        this.gameObject.y -= enemy.power;
+        this.gameObject.width += enemy.power * 2;
+        this.gameObject.height += enemy.power * 2;
         this.health += enemy.health;
         this.damage += enemy.power * 1;
         this.maxSpeed = this.power * 0.1 + 2.99;
@@ -262,10 +279,5 @@ class BasicEnemy
                 data.gameObject.height
             );
         }
-    }
-
-    canDamagePlayer(player)
-    {
-        return !((player.state == playerStates.dash) || this.stunned);
     }
 }

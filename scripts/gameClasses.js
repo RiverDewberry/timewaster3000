@@ -17,11 +17,11 @@ class GameObject
     collidesWith(other)
     {
         return (
-            ((this.x < other.x) && ((this.x + this.width) > other.x)) ||
-            ((other.x < this.x) && ((other.x + other.width) > this.x))
+            ((this.x <= other.x) && ((this.x + this.width) >= other.x)) ||
+            ((other.x <= this.x) && ((other.x + other.width) >= this.x))
         ) && (
-            ((this.y < other.y) && ((this.y + this.height) > other.y)) ||
-            ((other.y < this.y) && ((other.y + other.height) > this.y))
+            ((this.y <= other.y) && ((this.y + this.height) >= other.y)) ||
+            ((other.y <= this.y) && ((other.y + other.height) >= this.y))
         );
     }
 }

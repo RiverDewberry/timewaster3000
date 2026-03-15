@@ -72,6 +72,8 @@ class Enemy
         this.health = health;
         this.damage = damage;
         
+        this.enteredArea = false;
+
         this.stunned = false;
 
         this.gameObject = new GameObject(
@@ -80,6 +82,59 @@ class Enemy
 
         this.gameState.gameData.enemies.push(this);
         gameState.addGameObject(this, 2);
+    }
+
+    boundEnemyOnceEntered()
+    {
+        if (this.enteredArea)
+        {
+            this.boundToGameArea();
+        } else {
+            this.enteredArea = this.isFullyInGameArea();
+
+            if (this.enteredArea)
+                this.boundToGameArea();
+        }
+    }
+
+    isFullyInGameArea()
+    {
+        if (this.gameObject.x < 0) return false;
+
+        if (this.gameObject.y < 0) return false;
+
+        if (this.gameObject.x > 500 - this.gameObject.width) return false;
+
+        if (this.gameObject.y > 500 - this.gameObject.height) return false;
+    
+        return true;
+    }
+
+    boundToGameArea()
+    {
+        if (this.gameObject.x < 0)
+        {
+            this.gameObject.x = 0;
+            this.deltaX = 0;
+        }
+
+        if (this.gameObject.y < 0)
+        {
+            this.gameObject.y = 0;
+            this.deltaY = 0;
+        }
+
+        if (this.gameObject.x > 480)
+        {
+            this.gameObject.x = 480;
+            this.deltaX = 0;
+        }
+
+        if (this.gameObject.y > 480)
+        {
+            this.gameObject.y = 480;
+            this.deltaY = 0;
+        }
     }
 
     killEnemy()

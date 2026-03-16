@@ -1,4 +1,22 @@
-const enemyTypes = {basic: 0, archer: 1, projectile: 2};
+const enemyTypes = {
+    basic: 0,
+    archer: 1,
+    archerProjectile: 2
+};
+
+const enemyScaling = {
+    basic: {
+        scaleStart: 0,
+        scaleEnd: 0,
+        weight: 5
+    },
+
+    archer: {
+        scaleStart: 1000,
+        scaleEnd: 10000,
+        weight: 1
+    }
+}
 
 class EnemySpawner
 {
@@ -57,7 +75,7 @@ class EnemySpawner
             else this.spawnY = -50;
         }
 
-        new BasicEnemy(this.gameState, spawnX, spawnY, 10, 10);
+        new ArcherEnemy(this.gameState, spawnX, spawnY);
     }
 
 }
@@ -124,15 +142,15 @@ class Enemy
             this.deltaY = 0;
         }
 
-        if (this.gameObject.x > 480)
+        if (this.gameObject.x > 500 - this.gameObject.width)
         {
-            this.gameObject.x = 480;
+            this.gameObject.x = 500 - this.gameObject.width;
             this.deltaX = 0;
         }
 
-        if (this.gameObject.y > 480)
+        if (this.gameObject.y > 500 - this.gameObject.height)
         {
-            this.gameObject.y = 480;
+            this.gameObject.y = 500 - this.gameObject.height;
             this.deltaY = 0;
         }
     }
@@ -210,10 +228,9 @@ class Enemy
 
 class BasicEnemy extends Enemy
 {
-    constructor(gameState, x, y, width, height)
+    constructor(gameState, x, y)
     {
-        super(gameState, x, y, width, height, 5, 1, enemyTypes.basic)
-        this.gameState = gameState;
+        super(gameState, x, y, 10, 10, 5, 1, enemyTypes.basic);
      
         this.power = 1;
         this.maxSpeed = 3;
@@ -267,6 +284,7 @@ class BasicEnemy extends Enemy
     update(ctx)
     {
         this.move();
+        this.boundToGameArea();
 
         if (this.health < 0) return;
         this.collideWithBullets();
@@ -334,5 +352,187 @@ class BasicEnemy extends Enemy
                 data.gameObject.height
             );
         }
+    }
+}
+
+class ArcherEnemy extends Enemy
+{
+    constructor(gameState, x, y)
+    {
+        super(gameState, x, y, 14, 14, 2, 0.5, enemyTypes.archer)
+     
+        this.maxSpeed = 5;
+        this.acceleration = 5;
+        this.shotTimer = 0;
+
+        this.deltaX = 0;
+        this.deltaY = 0;
+        this.theta = Math.atan2(
+            y - gameState.gameData.player.gameObject.y,
+            x - gameState.gameData.player.gameObject.x
+        );
+        this.deltaTheta = 0.01 * ((Math.random() > 0.5) ? 1 : -1);
+    }
+
+    update(ctx)
+    {
+        this.move();
+        this.boundEnemyOnceEntered();
+        this.shoot();
+
+        if (this.health < 0) return;
+        this.collideWithBullets();
+
+        this.gameObject.update(ctx, this);
+    }
+
+    shoot()
+    {
+        if (this.health == 0 || this.stunned) return;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        
+        this.shotTimer += 1 / (velocityMag + 1);
+
+        if (this.shotTimer > 30)
+        {
+            this.shotTimer = 0;
+
+            new ArcherProjectile(
+                this.gameState,
+                this.gameObject.x,
+                this.gameObject.y,
+                Math.atan2(
+                    this.gameState.gameData.player.gameObject.y - this.gameObject.y,
+                    this.gameState.gameData.player.gameObject.x - this.gameObject.x
+                )
+            );
+        }
+    }
+
+    move()
+    {
+        this.theta += this.deltaTheta;
+
+        let player = this.gameState.gameData.player;
+
+        let targetCenterX = (
+            player.gameObject.x + player.gameObject.width * 0.5 + 200 * Math.cos(this.theta)
+        );
+        let targetCenterY = (
+            player.gameObject.y + player.gameObject.height * 0.5 + 200 * Math.sin(this.theta)
+        );
+
+        if (!this.enteredArea)
+        {
+            targetCenterX = player.gameObject.x + player.gameObject.width * 0.5;
+            targetCenterY = player.gameObject.y + player.gameObject.height * 0.5;
+        }
+
+        if ((targetCenterX < 0 || targetCenterX > 500 ||
+            targetCenterY < 0 || targetCenterY > 500)
+        )
+        {
+            let newTargetCenterX = (
+                player.gameObject.x + player.gameObject.width * 0.5 + 200 * Math.cos(
+                    this.theta + -10 * this.deltaTheta
+                )
+            );
+            let newTargetCenterY = (
+                player.gameObject.y + player.gameObject.height * 0.5 + 200 * Math.sin(
+                    this.theta + -10 * this.deltaTheta
+                )
+            );            
+
+            if (!(newTargetCenterX < 0 || newTargetCenterX > 500 ||
+                newTargetCenterY < 0 || newTargetCenterY > 500)
+            )
+            {
+                this.deltaTheta *= -1;
+                this.theta += this.deltaTheta * 10;
+            }
+        }
+
+        let enemyCenterX = (this.gameObject.x + this.gameObject.width * 0.5);
+        let enemyCenterY = (this.gameObject.y + this.gameObject.height * 0.5);
+
+        this.deltaX += this.acceleration * (targetCenterX > enemyCenterX) ? 0.1 : -0.1;
+        this.deltaY += this.acceleration * (targetCenterY > enemyCenterY) ? 0.1 : -0.1;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+
+        if (velocityMag > this.maxSpeed)
+        {
+            this.deltaX /= velocityMag / this.maxSpeed;
+            this.deltaY /= velocityMag / this.maxSpeed;
+        }
+
+        this.collideWithDashlines();
+
+        if (this.stunned == false)
+        {
+            this.gameObject.x += this.deltaX;
+            this.gameObject.y += this.deltaY;
+        } else {
+            this.gameObject.x += this.deltaX * 0.2;
+            this.gameObject.y += this.deltaY * 0.2;
+        }
+    }
+
+    draw(ctx, data)
+    {
+        ctx.fillStyle = "Black";
+        ctx.fillRect(
+            data.gameObject.x,
+            data.gameObject.y,
+            data.gameObject.width,
+            data.gameObject.height
+        );
+    }
+}
+
+class ArcherProjectile extends Enemy
+{
+    constructor(gameState, x, y, angle)
+    {
+        super(gameState, x, y, 10, 10, 1, 0.5, enemyTypes.archerProjectile);
+
+        this.deltaX = Math.cos(angle) * 5;
+        this.deltaY = Math.sin(angle) * 5;
+    }
+
+    update(ctx)
+    {
+        this.move();
+
+        if (this.health < 0) return;
+        this.collideWithDashlines();
+
+        if (this.stunned == true) this.killEnemy();
+
+        this.gameObject.update(ctx, this);
+    }
+
+    move()
+    {
+        this.gameObject.x += this.deltaX;
+        this.gameObject.y += this.deltaY;
+
+        if ((this.gameObject.x < (-1 * this.gameObject.width)) ||
+            (this.gameObject.y < (-1 * this.gameObject.height)) ||
+            (this.gameObject.x > (this.gameObject.width + 500)) ||
+            (this.gameObject.y > (this.gameObject.height + 500))
+        ) this.killEnemy();
+    }
+
+    draw(ctx, data)
+    {
+        ctx.fillStyle = "Grey";
+        ctx.fillRect(
+            data.gameObject.x,
+            data.gameObject.y,
+            data.gameObject.width,
+            data.gameObject.height
+        );
     }
 }

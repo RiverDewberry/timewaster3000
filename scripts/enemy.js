@@ -367,7 +367,7 @@ class ArcherEnemy extends Enemy
 
         this.deltaX = 0;
         this.deltaY = 0;
-        this.theta = Math.atan2(
+        this.theta = 0.5 + Math.atan2(
             y - gameState.gameData.player.gameObject.y,
             x - gameState.gameData.player.gameObject.x
         );
@@ -394,17 +394,25 @@ class ArcherEnemy extends Enemy
         
         this.shotTimer += 1 / (velocityMag + 1);
 
-        if (this.shotTimer > 30)
+        if (this.shotTimer > 20)
         {
             this.shotTimer = 0;
+
+            let playerObject = this.gameState.gameData.player.gameObject;
+            let player = this.gameState.gameData.player;
+
+            let distToPlayer = Math.sqrt(
+                Math.pow(playerObject.y - this.gameObject.y, 2) +
+                Math.pow(playerObject.x - this.gameObject.x, 2)
+            );
 
             new ArcherProjectile(
                 this.gameState,
                 this.gameObject.x,
                 this.gameObject.y,
                 Math.atan2(
-                    this.gameState.gameData.player.gameObject.y - this.gameObject.y,
-                    this.gameState.gameData.player.gameObject.x - this.gameObject.x
+                    playerObject.y + (player.deltaY * distToPlayer * 0.05) - this.gameObject.y,
+                    playerObject.x + (player.deltaX * distToPlayer * 0.05) - this.gameObject.x
                 )
             );
         }
@@ -486,7 +494,15 @@ class ArcherEnemy extends Enemy
             data.gameObject.x,
             data.gameObject.y,
             data.gameObject.width,
-            data.gameObject.height
+            data.gameObject.height,
+        );
+        ctx.strokeStyle = "LightGrey";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(
+            data.gameObject.x - 6,
+            data.gameObject.y - 6,
+            data.gameObject.width + 12,
+            data.gameObject.height + 12,
         );
     }
 }

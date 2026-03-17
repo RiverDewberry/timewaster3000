@@ -186,6 +186,14 @@ class Player
             this.deltaX += 5 * this.dashDirection.x;
             this.deltaY += 5 * this.dashDirection.y;
             this.findDashDirection();
+
+            if (keysDown.includes("x") && this.dashCount >= 1)
+            {
+                this.state = playerStates.dash;
+                this.dashCount -= 1;
+                this.dashTimer = 0;
+                new DashEffect(this.gameState, this);
+            }
         }
     }
 

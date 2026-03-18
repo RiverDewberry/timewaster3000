@@ -21,9 +21,9 @@ class Player
         this.shotDelayTimer = 0;
 
         this.health = 15;
-        this.tookDamage = false;
 
         this.state = playerStates.move;
+        this.slowed = false;
 
         gameState.addGameObject(this, 0);
         gameState.gameData.player = this;
@@ -60,21 +60,27 @@ class Player
             this.deltaY = 0;
         }
 
-        this.tookDamage = false;
+        this.slowed = false;
         for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
         {
             if (this.gameObject.collidesWith(
                 this.gameState.gameData.enemies[i].gameObject
             ) && this.gameState.gameData.enemies[i].canDamagePlayer(this))
             {
-                this.takeDamage(this.gameState.gameData.enemies[i].damage);
-                this.gameState.gameData.enemies[i].killEnemy();
+
+                if (this.gameState.gameData.enemies[i].type == enemyTypes.dashLine)
+                {
+                    this.slowed = true;
+                } else {
+                    this.takeDamage(this.gameState.gameData.enemies[i].damage);
+                    this.gameState.gameData.enemies[i].killEnemy();
+                }
             }
         }
 
         if (this.health < 15)
         {
-            this.health += 0.001;
+            this.health += 0.002;
         }
         else this.health = 15;
 
@@ -83,7 +89,6 @@ class Player
 
     takeDamage(amount)
     {
-        this.tookDamage = true;
         this.health -= amount;
         if (this.health <= 0)
         {
@@ -137,7 +142,7 @@ class Player
 
         let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
 
-        if (velocityMag > 7)
+        if (velocityMag > 5)
         {
             this.deltaX /= velocityMag * 0.2;
             this.deltaY /= velocityMag * 0.2;
@@ -145,8 +150,8 @@ class Player
 
         this.findDashDirection();
 
-        this.gameObject.x += this.deltaX;
-        this.gameObject.y += this.deltaY;
+        this.gameObject.x += this.deltaX * ((this.slowed) ? 0.2 : 1);
+        this.gameObject.y += this.deltaY * ((this.slowed) ? 0.2 : 1);
     }
 
     shoot()
@@ -181,6 +186,10 @@ class Player
         this.dashTimer += 1;
         if (this.dashTimer >= 10)
         {
+            if (this.gameObject.x < 0) {this.gameObject.x = 0; this.deltaX = 0;}
+            if (this.gameObject.y < 0) {this.gameObject.y = 0; this.deltaY = 0;}
+            if (this.gameObject.x > 480) {this.gameObject.x = 480; this.deltaX = 0;}
+            if (this.gameObject.y > 480) {this.gameObject.y = 480; this.deltaY = 0;}
             this.state = playerStates.move;
             this.dashTimer = 0;
             this.deltaX += 5 * this.dashDirection.x;
@@ -321,7 +330,7 @@ class DashEffect
         this.direction = {x: player.dashDirection.x, y: player.dashDirection.y};
 
         this.gameState.gameData.dashlines.push(this);
-        gameState.addGameObject(this, 3);
+        gameState.addGameObject(this, 4);
    }
 
     update(ctx)

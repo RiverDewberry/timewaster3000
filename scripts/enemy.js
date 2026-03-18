@@ -1,22 +1,36 @@
 const enemyTypes = {
     basic: 0,
     archer: 1,
-    archerProjectile: 2
+    archerProjectile: 2,
+    dash: 3,
+    dashLine: 4
 };
 
-const enemyScaling = {
-    basic: {
+const enemyScaling = [
+    {
         scaleStart: 0,
         scaleEnd: 0,
-        weight: 5
+        fullWeight: 4,
+        spawn: function(gs, x, y) {new BasicEnemy(gs, x, y);},
+        curentWeight: null
     },
 
-    archer: {
+    {
+        scaleStart: 250,
+        scaleEnd: 5000,
+        fullWeight: 1,
+        spawn: function(gs, x, y) {new ArcherEnemy(gs, x, y);},
+        curentWeight: null
+    },
+
+    {
         scaleStart: 1000,
         scaleEnd: 10000,
-        weight: 1
-    }
-}
+        fullWeight: 1,
+        spawn: function(gs, x, y) {new DashEnemy(gs, x, y);},
+        curentWeight: null
+    },
+];
 
 class EnemySpawner
 {
@@ -29,7 +43,7 @@ class EnemySpawner
         this.enemySpawnTimer = 0;
         this.enemySpawnTimerTarget = 50;
 
-        gameState.addGameObject(this, 4);
+        gameState.addGameObject(this, 5);
         gameState.gameData.enemySpawner = this;
     }
 
@@ -69,20 +83,45 @@ class EnemySpawner
             ) < 300
         )
         {
-            if (this.spawnX < 0) this.spawnX = 550;
-            else if (this.spawnX > 500) this.spawnX = -50;
-            else if (this.spawnY < 0) this.spawnY = 550;
-            else this.spawnY = -50;
+            if (spawnX < 0) spawnX = 550;
+            else if (spawnX > 500) spawnX = -50;
+            else if (spawnY < 0) spawnY = 550;
+            else spawnY = -50;
         }
 
-        new ArcherEnemy(this.gameState, spawnX, spawnY);
-    }
+        let totalWeight = 0;
+        for (let i = 0; i < enemyScaling.length; i++)
+        {
+            if (enemyScaling[i].scaleStart > this.gameTime)
+                enemyScaling[i].curentWeight = 0;
+            else if (enemyScaling[i].scaleEnd <= this.gameTime)
+                enemyScaling[i].curentWeight = enemyScaling[i].fullWeight;
+            else {
+                enemyScaling[i].curentWeight = (this.gameTime - enemyScaling[i].scaleStart) /
+                (enemyScaling[i].scaleEnd - enemyScaling[i].scaleStart) *
+                enemyScaling[i].fullWeight
+            }
 
+            totalWeight += enemyScaling[i].curentWeight;
+        }
+
+        let tempNumber = Math.random() * totalWeight;
+
+        for (let i = 0; i < enemyScaling.length; i++)
+        {
+            tempNumber -= enemyScaling[i].curentWeight;
+            if (tempNumber < 0)
+            {
+                enemyScaling[i].spawn(this.gameState, spawnX, spawnY);
+                break;
+            }
+        }
+    }
 }
 
 class Enemy
 {
-    constructor(gameState, x, y, width, height, health, damage, type)
+    constructor(gameState, x, y, width, height, health, damage, type, updateOrder)
     {
         this.gameState = gameState;
      
@@ -99,7 +138,7 @@ class Enemy
         );
 
         this.gameState.gameData.enemies.push(this);
-        gameState.addGameObject(this, 2);
+        gameState.addGameObject(this, updateOrder);
     }
 
     boundEnemyOnceEntered()
@@ -230,7 +269,7 @@ class BasicEnemy extends Enemy
 {
     constructor(gameState, x, y)
     {
-        super(gameState, x, y, 10, 10, 5, 1, enemyTypes.basic);
+        super(gameState, x, y, 10, 10, 5, 1, enemyTypes.basic, 2);
      
         this.power = 1;
         this.maxSpeed = 3;
@@ -284,7 +323,7 @@ class BasicEnemy extends Enemy
     update(ctx)
     {
         this.move();
-        this.boundToGameArea();
+        this.boundEnemyOnceEntered();
 
         if (this.health < 0) return;
         this.collideWithBullets();
@@ -359,7 +398,7 @@ class ArcherEnemy extends Enemy
 {
     constructor(gameState, x, y)
     {
-        super(gameState, x, y, 14, 14, 2, 0.5, enemyTypes.archer)
+        super(gameState, x, y, 14, 14, 2, 0.5, enemyTypes.archer, 2)
      
         this.maxSpeed = 5;
         this.acceleration = 5;
@@ -380,7 +419,11 @@ class ArcherEnemy extends Enemy
         this.boundEnemyOnceEntered();
         this.shoot();
 
-        if (this.health < 0) return;
+        if (this.health < 0)
+        {
+            this.killEnemy();
+            return;
+        }
         this.collideWithBullets();
 
         this.gameObject.update(ctx, this);
@@ -499,11 +542,16 @@ class ArcherEnemy extends Enemy
         ctx.strokeStyle = "LightGrey";
         ctx.lineWidth = 4;
         ctx.strokeRect(
-            data.gameObject.x - 6,
-            data.gameObject.y - 6,
-            data.gameObject.width + 12,
-            data.gameObject.height + 12,
+            data.gameObject.x - 8,
+            data.gameObject.y - 8,
+            data.gameObject.width + 16,
+            data.gameObject.height + 16,
         );
+    }
+
+    canDamagePlayer(player)
+    {
+        return !(player.state == playerStates.dash);
     }
 }
 
@@ -511,7 +559,7 @@ class ArcherProjectile extends Enemy
 {
     constructor(gameState, x, y, angle)
     {
-        super(gameState, x, y, 10, 10, 1, 0.5, enemyTypes.archerProjectile);
+        super(gameState, x, y, 10, 10, 1, 1, enemyTypes.archerProjectile, 2);
 
         this.deltaX = Math.cos(angle) * 5;
         this.deltaY = Math.sin(angle) * 5;
@@ -544,6 +592,287 @@ class ArcherProjectile extends Enemy
     draw(ctx, data)
     {
         ctx.fillStyle = "Grey";
+        ctx.fillRect(
+            data.gameObject.x,
+            data.gameObject.y,
+            data.gameObject.width,
+            data.gameObject.height
+        );
+    }
+}
+
+class DashEnemy extends Enemy
+{
+    constructor(gameState, x, y)
+    {
+        super(gameState, x, y, 12, 12, 10, 2, enemyTypes.dash, 2)
+     
+        this.maxSpeed = 4;
+        this.acceleration = 4;
+        this.shotTimer = 0;
+
+        this.deltaX = 0;
+        this.deltaY = 0;
+        this.theta = 1 + Math.atan2(
+            y - gameState.gameData.player.gameObject.y,
+            x - gameState.gameData.player.gameObject.x
+        );
+        this.deltaTheta = 0.03 * ((Math.random() > 0.5) ? 1 : -1);
+
+        this.dashDirection = {x: 0, y: 0};
+        this.dashTimer = 10;
+    }
+
+    findDashDirection()
+    {
+        let player = this.gameState.gameData.player;
+        let targetCenterX = player.gameObject.x + player.gameObject.width * 0.5;
+        let targetCenterY = player.gameObject.y + player.gameObject.height * 0.5;
+        let enemyCenterX = this.gameObject.x + this.gameObject.width * 0.5;
+        let enemyCenterY = this.gameObject.y + this.gameObject.height * 0.5;
+
+        if (
+            Math.abs(targetCenterX - enemyCenterX) >
+            Math.abs(targetCenterY - enemyCenterY)
+        )
+        {
+            this.dashDirection.y = 0;
+            this.dashDirection.x = ((targetCenterX - enemyCenterX) > 0) ? 1 : -1;
+        } else {
+            this.dashDirection.x = 0;
+            this.dashDirection.y = ((targetCenterY - enemyCenterY) > 0) ? 1 : -1;
+        }
+    }
+
+    move()
+    {
+        if (this.dashTimer < 10)
+        {
+            if (this.dashTimer == 0)
+            {
+                new EnemyDashEffect(this.gameState, this);
+            }
+            this.dash();
+
+            return;
+        } else this.findDashDirection();
+
+        this.collideWithDashlines();
+        if (!this.stunned)
+        {
+            this.dashTimer += 1;
+            if (this.dashTimer > 50) this.dashTimer = 0;
+        }
+
+        this.theta += this.deltaTheta;
+
+        let player = this.gameState.gameData.player;
+
+        let targetCenterX = (
+            player.gameObject.x + player.gameObject.width * 0.5 + 100 * Math.cos(this.theta)
+        );
+        let targetCenterY = (
+            player.gameObject.y + player.gameObject.height * 0.5 + 100 * Math.sin(this.theta)
+        );
+
+        if (!this.enteredArea)
+        {
+            targetCenterX = player.gameObject.x + player.gameObject.width * 0.5;
+            targetCenterY = player.gameObject.y + player.gameObject.height * 0.5;
+        }
+
+        if ((targetCenterX < 0 || targetCenterX > 500 ||
+            targetCenterY < 0 || targetCenterY > 500)
+        )
+        {
+            let newTargetCenterX = (
+                player.gameObject.x + player.gameObject.width * 0.5 + 100 * Math.cos(
+                    this.theta + -10 * this.deltaTheta
+                )
+            );
+            let newTargetCenterY = (
+                player.gameObject.y + player.gameObject.height * 0.5 + 100 * Math.sin(
+                    this.theta + -10 * this.deltaTheta
+                )
+            );            
+
+            if (!(newTargetCenterX < 0 || newTargetCenterX > 500 ||
+                newTargetCenterY < 0 || newTargetCenterY > 500)
+            )
+            {
+                this.deltaTheta *= -1;
+                this.theta += this.deltaTheta * 10;
+            }
+        }
+
+        let enemyCenterX = (this.gameObject.x + this.gameObject.width * 0.5);
+        let enemyCenterY = (this.gameObject.y + this.gameObject.height * 0.5);
+
+        this.deltaX += this.acceleration * (targetCenterX > enemyCenterX) ? 0.1 : -0.1;
+        this.deltaY += this.acceleration * (targetCenterY > enemyCenterY) ? 0.1 : -0.1;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+
+        if (velocityMag > this.maxSpeed)
+        {
+            this.deltaX /= velocityMag / this.maxSpeed;
+            this.deltaY /= velocityMag / this.maxSpeed;
+        }
+
+        if (this.stunned == false)
+        {
+            this.gameObject.x += this.deltaX;
+            this.gameObject.y += this.deltaY;
+        } else {
+            this.gameObject.x += this.deltaX * 0.2;
+            this.gameObject.y += this.deltaY * 0.2;
+        }
+    }
+
+    dash()
+    {
+        this.gameObject.x += (15 - this.dashTimer) * this.dashDirection.x;
+        this.gameObject.y += (15 - this.dashTimer) * this.dashDirection.y;
+        this.deltaX = (15 - this.dashTimer) * this.dashDirection.x;
+        this.deltaY = (15 - this.dashTimer) * this.dashDirection.y;
+
+        if (keysDown.includes("ArrowLeft")) this.angle -= Math.PI / 20;
+        if (keysDown.includes("ArrowRight")) this.angle += Math.PI / 20;
+
+        this.deltaX += 5 * this.dashDirection.x;
+        this.deltaY += 5 * this.dashDirection.y;
+        this.dashTimer += 1;
+    }
+
+    update(ctx)
+    {
+        this.move();
+        this.boundEnemyOnceEntered();
+
+        if (this.health < 0)
+        {
+            this.killEnemy();
+            return;
+        }
+
+        if (this.dashTimer >= 10) this.collideWithBullets();
+
+        this.gameObject.update(ctx, this);
+    }
+
+    draw(ctx, data)
+    {
+        if (data.dashTimer >= 10)
+        {
+            ctx.strokeStyle = "Lightgrey"
+            ctx.lineWidth = 4;
+
+            ctx.strokeRect(
+                data.gameObject.x - 6,
+                data.gameObject.y - 6,
+                data.gameObject.width + 12,
+                data.gameObject.height + 12
+            );
+
+            ctx.fillStyle = "Black";
+            ctx.fillRect(
+                data.gameObject.x,
+                data.gameObject.y,
+                data.gameObject.width,
+                data.gameObject.height
+            );
+
+            ctx.fillStyle = "Grey";
+            ctx.fillRect(
+                data.gameObject.x + data.gameObject.width * 
+                (data.dashDirection.x - Math.abs(data.dashDirection.y)) + 4,
+                data.gameObject.y + data.gameObject.width *
+                (data.dashDirection.y - Math.abs(data.dashDirection.x)) + 4,
+                4 + 24 * Math.abs(data.dashDirection.y),
+                4 + 24 * Math.abs(data.dashDirection.x)
+            );
+
+        } else {
+            ctx.strokeStyle = "Grey"
+            ctx.lineWidth = 4;
+
+            ctx.strokeRect(
+                data.gameObject.x,
+                data.gameObject.y,
+                data.gameObject.width,
+                data.gameObject.height
+            );
+        }
+    }
+
+    canDamagePlayer(player)
+    {
+        return !((player.state == playerStates.dash) || (this.dashTimer < 10));
+    }
+}
+
+class EnemyDashEffect extends Enemy
+{
+    constructor(gameState, enemy)
+    {
+        super(
+            gameState,
+            enemy.gameObject.x + 0.5 * enemy.gameObject.width - 2,
+            enemy.gameObject.y + 0.5 * enemy.gameObject.width - 2,
+            4, 4, 5, 2, enemyTypes.dashLine, 3
+        );
+
+        this.timer = 0;
+        this.kill = false;
+
+        this.direction = {x: enemy.dashDirection.x, y: enemy.dashDirection.y};
+   }
+
+    update(ctx)
+    {   
+        if (this.timer < 10)
+        {
+            this.gameObject.width += Math.abs((15 - this.timer) * this.direction.x);
+            this.gameObject.height += Math.abs((15 - this.timer) * this.direction.y);
+
+            if ((15 - this.timer) * this.direction.x < 0)
+            {
+                this.gameObject.x += (15 - this.timer) * this.direction.x;
+            }
+
+            if ((15 - this.timer) * this.direction.y < 0)
+            {
+                this.gameObject.y += (15 - this.timer) * this.direction.y;
+            }
+        }
+
+        if (this.timer >= 100)
+        {
+            this.gameObject.width -= Math.abs((95 - this.timer) * this.direction.x);
+            this.gameObject.height -= Math.abs((95 - this.timer) * this.direction.y);
+
+            if ((15 - this.timer) * this.direction.x < 0)
+            {
+                this.gameObject.x -= (95 - this.timer) * this.direction.x;
+            }
+
+            if ((15 - this.timer) * this.direction.y < 0)
+            {
+                this.gameObject.y -= (95 - this.timer) * this.direction.y;
+            }
+        }
+
+        if (this.timer == 110) this.killEnemy();
+
+        this.timer += 1;
+
+        this.gameObject.update(ctx, this);
+    }
+
+    draw(ctx, data)
+    {
+        ctx.fillStyle = "Grey";
+
         ctx.fillRect(
             data.gameObject.x,
             data.gameObject.y,

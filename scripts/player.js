@@ -177,8 +177,8 @@ class Player
     {
         this.gameObject.x += (15 - this.dashTimer) * this.dashDirection.x;
         this.gameObject.y += (15 - this.dashTimer) * this.dashDirection.y;
-        this.deltaX = (15 - this.dashTimer) * this.dashDirection.x;
-        this.deltaY = (15 - this.dashTimer) * this.dashDirection.y;
+        this.deltaX = 5 * this.dashDirection.x;
+        this.deltaY = 5 * this.dashDirection.y;
 
         if (keysDown.includes("ArrowLeft")) this.angle -= Math.PI / 20;
         if (keysDown.includes("ArrowRight")) this.angle += Math.PI / 20;
@@ -192,8 +192,8 @@ class Player
             if (this.gameObject.y > 480) {this.gameObject.y = 480; this.deltaY = 0;}
             this.state = playerStates.move;
             this.dashTimer = 0;
-            this.deltaX += 5 * this.dashDirection.x;
-            this.deltaY += 5 * this.dashDirection.y;
+            this.deltaX = 5 * this.dashDirection.x;
+            this.deltaY = 5 * this.dashDirection.y;
             this.findDashDirection();
 
             if (keysDown.includes("x") && this.dashCount >= 1)

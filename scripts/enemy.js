@@ -32,12 +32,6 @@ const enemyScaling = [
     },
 ];
 
-for (let i = 0; i < enemyScaling.length; i++)
-{
-    enemyScaling[i].scaleStart *= 40;
-    enemyScaling[i].scaleEnd *= 40;
-}
-
 class EnemySpawner
 {
     constructor(gameState)
@@ -413,7 +407,7 @@ class ArcherEnemy extends Enemy
 {
     constructor(gameState, x, y)
     {
-        super(gameState, x, y, 14, 14, 2, 0.5, enemyTypes.archer, 2)
+        super(gameState, x, y, 14, 14, 8, 1, enemyTypes.archer, 2)
      
         this.maxSpeed = 5;
         this.acceleration = 5;
@@ -426,12 +420,16 @@ class ArcherEnemy extends Enemy
             x - gameState.gameData.player.gameObject.x
         );
         this.deltaTheta = 0.01 * ((Math.random() > 0.5) ? 1 : -1);
+        
+        this.shotAngle = 0;
+        this.getShotAngle();
     }
 
     update(ctx)
     {
         this.move();
         this.boundEnemyOnceEntered();
+        this.getShotAngle();
         this.shoot();
 
         if (this.health < 0)
@@ -456,24 +454,29 @@ class ArcherEnemy extends Enemy
         {
             this.shotTimer = 0;
 
-            let playerObject = this.gameState.gameData.player.gameObject;
-            let player = this.gameState.gameData.player;
-
-            let distToPlayer = Math.sqrt(
-                Math.pow(playerObject.y - this.gameObject.y, 2) +
-                Math.pow(playerObject.x - this.gameObject.x, 2)
-            );
-
             new ArcherProjectile(
                 this.gameState,
                 this.gameObject.x,
                 this.gameObject.y,
-                Math.atan2(
-                    playerObject.y + (player.deltaY * distToPlayer * 0.05) - this.gameObject.y,
-                    playerObject.x + (player.deltaX * distToPlayer * 0.05) - this.gameObject.x
-                )
+                this.shotAngle
             );
         }
+    }
+
+    getShotAngle()
+    {
+        let playerObject = this.gameState.gameData.player.gameObject;
+        let player = this.gameState.gameData.player;
+
+        let distToPlayer = Math.sqrt(
+            Math.pow(playerObject.y + 5 - this.gameObject.y, 2) +
+            Math.pow(playerObject.x + 5- this.gameObject.x, 2)
+        );
+
+        this.shotAngle = Math.atan2(
+            playerObject.y + 5 + (player.deltaY * distToPlayer * 0.05) - this.gameObject.y,
+            playerObject.x + 5 + (player.deltaX * distToPlayer * 0.05) - this.gameObject.x
+        )
     }
 
     move()
@@ -557,11 +560,25 @@ class ArcherEnemy extends Enemy
         ctx.strokeStyle = "LightGrey";
         ctx.lineWidth = 4;
         ctx.strokeRect(
-            data.gameObject.x - 8,
-            data.gameObject.y - 8,
-            data.gameObject.width + 16,
-            data.gameObject.height + 16,
+            data.gameObject.x - 7,
+            data.gameObject.y - 7,
+            data.gameObject.width + 14,
+            data.gameObject.height + 14,
         );
+
+        let xDirection = Math.cos(data.shotAngle);
+        let yDirection = Math.sin(data.shotAngle);
+        let directionScale = Math.max(Math.abs(xDirection), Math.abs(yDirection));
+        xDirection /= directionScale;
+        yDirection /= directionScale;
+
+        ctx.fillStyle = "Grey";
+        ctx.fillRect(
+            data.gameObject.x + 4 + 14 * xDirection,
+            data.gameObject.y + 4 + 14 * yDirection,
+            6,
+            6,
+        );        
     }
 
     canDamagePlayer(player)
@@ -574,7 +591,23 @@ class ArcherProjectile extends Enemy
 {
     constructor(gameState, x, y, angle)
     {
-        super(gameState, x, y, 10, 10, 1, 1, enemyTypes.archerProjectile, 2);
+        let xDirection = Math.cos(angle);
+        let yDirection = Math.sin(angle);
+        let directionScale = Math.max(Math.abs(xDirection), Math.abs(yDirection));
+        xDirection /= directionScale;
+        yDirection /= directionScale;
+
+        super(
+            gameState,
+            x + 2 + 14 * xDirection,
+            y + 2 + 14 * yDirection,
+            10,
+            10,
+            1,
+            2,
+            enemyTypes.archerProjectile,
+            2
+        );
 
         this.deltaX = Math.cos(angle) * 5;
         this.deltaY = Math.sin(angle) * 5;
@@ -620,7 +653,7 @@ class DashEnemy extends Enemy
 {
     constructor(gameState, x, y)
     {
-        super(gameState, x, y, 12, 12, 8, 2, enemyTypes.dash, 2)
+        super(gameState, x, y, 12, 12, 3, 1, enemyTypes.dash, 2)
      
         this.maxSpeed = 4;
         this.acceleration = 4;

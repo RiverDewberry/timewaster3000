@@ -16,21 +16,27 @@ const enemyScaling = [
     },
 
     {
-        scaleStart: 250,
-        scaleEnd: 5000,
+        scaleStart: 10,
+        scaleEnd: 130,
         fullWeight: 1,
         spawn: function(gs, x, y) {new ArcherEnemy(gs, x, y);},
         curentWeight: null
     },
 
     {
-        scaleStart: 1000,
-        scaleEnd: 10000,
+        scaleStart: 70,
+        scaleEnd: 370,
         fullWeight: 1,
         spawn: function(gs, x, y) {new DashEnemy(gs, x, y);},
         curentWeight: null
     },
 ];
+
+for (let i = 0; i < enemyScaling.length; i++)
+{
+    enemyScaling[i].scaleStart *= 40;
+    enemyScaling[i].scaleEnd *= 40;
+}
 
 class EnemySpawner
 {
@@ -57,6 +63,15 @@ class EnemySpawner
             this.enemySpawnTimer = 0;
             this.enemySpawnTimerTarget = Math.random() * 50 + 50;
         }
+
+        this.draw(this.gameState.ctx, this);
+    }
+
+    draw(ctx, data)
+    {
+        ctx.font = "15px Monospace";
+        ctx.fillStyle = "Black";
+        ctx.fillText(Math.round(data.gameTime * 0.025), 5, 15);
     }
 
     spawnEnemy()
@@ -525,8 +540,8 @@ class ArcherEnemy extends Enemy
             this.gameObject.x += this.deltaX;
             this.gameObject.y += this.deltaY;
         } else {
-            this.gameObject.x += this.deltaX * 0.2;
-            this.gameObject.y += this.deltaY * 0.2;
+            this.gameObject.x += this.deltaX * 0.1;
+            this.gameObject.y += this.deltaY * 0.1;
         }
     }
 
@@ -605,7 +620,7 @@ class DashEnemy extends Enemy
 {
     constructor(gameState, x, y)
     {
-        super(gameState, x, y, 12, 12, 10, 2, enemyTypes.dash, 2)
+        super(gameState, x, y, 12, 12, 8, 2, enemyTypes.dash, 2)
      
         this.maxSpeed = 4;
         this.acceleration = 4;

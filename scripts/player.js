@@ -252,13 +252,17 @@ class Player
                 data.gameObject.height
             );
             
-            ctx.fillStyle = "Red";
-            ctx.fillRect(
-                data.gameObject.x + data.gameObject.height * (0.5 - data.health / 30),
-                data.gameObject.y + data.gameObject.width * (0.5 - data.health / 30),
-                data.gameObject.width * (data.health / 15),
-                data.gameObject.height * (data.health / 15)
-            );
+            if (data.health > 0)
+            {
+                ctx.fillStyle = "Red";
+
+                ctx.fillRect(
+                    data.gameObject.x + data.gameObject.height * (0.5 - data.health / 30),
+                    data.gameObject.y + data.gameObject.width * (0.5 - data.health / 30),
+                    data.gameObject.width * (data.health / 15),
+                    data.gameObject.height * (data.health / 15)
+                );
+            }
 
         } else {
             ctx.strokeStyle = "rgb(" + Math.round(data.health * 10 + 105) + ", 105, 105)";
@@ -496,4 +500,4 @@ class Bullet
             }
         }
     }    
-}
+}           

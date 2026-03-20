@@ -415,8 +415,18 @@ class Bullet
         xDirection /= directionScale;
         yDirection /= directionScale;
 
-        this.deltaX = player.deltaX + Math.cos(player.angle) * 7.5;
-        this.deltaY = player.deltaY + Math.sin(player.angle) * 7.5;
+        this.deltaX = Math.cos(player.angle) * 7.5;
+        this.deltaY = Math.sin(player.angle) * 7.5;
+
+        if (player.state == playerStates.dash)
+        {
+            this.deltaX +=  (15 - player.dashTimer) * player.dashDirection.x;
+            this.deltaY +=  (15 - player.dashTimer) * player.dashDirection.y;
+        } else {
+            this.deltaX += player.deltaX;
+            this.deltaY += player.deltaY;
+        }
+
         this.deltaTotal = Math.sqrt(
             this.deltaX * this.deltaX +
             this.deltaY * this.deltaY
@@ -500,4 +510,4 @@ class Bullet
             }
         }
     }    
-}           
+}

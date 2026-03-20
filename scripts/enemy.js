@@ -10,7 +10,8 @@ const enemyScaling = [
     {
         scaleStart: 0,
         scaleEnd: 0,
-        fullWeight: 4,
+        fullWeight: 10,
+        delayFactor: 0.5,
         spawn: function(gs, x, y) {new BasicEnemy(gs, x, y);},
         curentWeight: null
     },
@@ -18,7 +19,8 @@ const enemyScaling = [
     {
         scaleStart: 10,
         scaleEnd: 130,
-        fullWeight: 1,
+        fullWeight: 3,
+        delayFactor: 1.25,
         spawn: function(gs, x, y) {new ArcherEnemy(gs, x, y);},
         curentWeight: null
     },
@@ -26,11 +28,18 @@ const enemyScaling = [
     {
         scaleStart: 70,
         scaleEnd: 370,
-        fullWeight: 1,
+        fullWeight: 2,
+        delayFactor: 2,
         spawn: function(gs, x, y) {new DashEnemy(gs, x, y);},
         curentWeight: null
     },
 ];
+
+for (let i = 0; i < enemyScaling.length; i++)
+{
+    enemyScaling[i].scaleStart *= 40;
+    enemyScaling[i].scaleEnd *= 40;
+}
 
 class EnemySpawner
 {
@@ -55,7 +64,6 @@ class EnemySpawner
         {
             this.spawnEnemy();
             this.enemySpawnTimer = 0;
-            this.enemySpawnTimerTarget = Math.random() * 50 + 50;
         }
 
         this.draw(this.gameState.ctx, this);
@@ -121,6 +129,9 @@ class EnemySpawner
             tempNumber -= enemyScaling[i].curentWeight;
             if (tempNumber < 0)
             {
+                this.enemySpawnTimerTarget = 
+                    Math.random() * 50 * enemyScaling[i].delayFactor + 50;
+
                 enemyScaling[i].spawn(this.gameState, spawnX, spawnY);
                 break;
             }

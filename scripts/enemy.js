@@ -3,7 +3,8 @@ const enemyTypes = {
     archer: 1,
     archerProjectile: 2,
     dash: 3,
-    dashLine: 4
+    dashLine: 4,
+    tank: 5
 };
 
 const enemyScaling = [
@@ -27,10 +28,19 @@ const enemyScaling = [
 
     {
         scaleStart: 70,
-        scaleEnd: 370,
+        scaleEnd: 220,
         fullWeight: 2,
         delayFactor: 2,
         spawn: function(gs, x, y) {new DashEnemy(gs, x, y);},
+        curentWeight: null
+    },
+
+    {
+        scaleStart: 170,
+        scaleEnd: 340,
+        fullWeight: 1,
+        delayFactor: 5,
+        spawn: function(gs, x, y) {new TankEnemy(gs, x, y);},
         curentWeight: null
     },
 ];
@@ -47,7 +57,7 @@ class EnemySpawner
     {
         this.gameState = gameState;
 
-        this.gameTime = 0;
+        this.gameTime = 500 * 40;
 
         this.enemySpawnTimer = 0;
         this.enemySpawnTimerTarget = 50;
@@ -114,8 +124,8 @@ class EnemySpawner
             else if (enemyScaling[i].scaleEnd <= this.gameTime)
                 enemyScaling[i].curentWeight = enemyScaling[i].fullWeight;
             else {
-                enemyScaling[i].curentWeight = (this.gameTime - enemyScaling[i].scaleStart) /
-                (enemyScaling[i].scaleEnd - enemyScaling[i].scaleStart) *
+                enemyScaling[i].curentWeight = ((this.gameTime - enemyScaling[i].scaleStart) /
+                (enemyScaling[i].scaleEnd - enemyScaling[i].scaleStart)) *
                 enemyScaling[i].fullWeight
             }
 
@@ -238,18 +248,16 @@ class Enemy
                 let bulletVelocity = Math.sqrt(
                     bullet.deltaX * bullet.deltaX + bullet.deltaY * bullet.deltaY
                 );
-                let newVelocity = bulletVelocity - this.health;
+                
+                let newVelocity = bulletVelocity - this.takeDamage(bulletVelocity);
 
                 bullet.gameObject.x += bulletVelocity;
                 bullet.gameObject.y += bulletVelocity;
-
-                this.health -= bulletVelocity;
                 
                 if (newVelocity < 1)
                 {
                     bullet.deltaX = 0;
                     bullet.deltaY = 0;
-                    return;
                 }
 
                 bullet.deltaX *= newVelocity * (1 / bulletVelocity);
@@ -260,10 +268,21 @@ class Enemy
                 bullet.gameObject.width = 2 * newVelocity;
                 bullet.gameObject.height = 2 * newVelocity;
 
-                if (this.health < 0) this.killEnemy();
                 return;
             }
         }
+    }
+
+    takeDamage(amount)
+    {
+        let oldHealth = this.health;
+        this.health -= amount;
+        if (this.health < 0)
+        {
+            this.killEnemy();
+            return oldHealth;
+        }
+        return amount;
     }
 
     collideWithDashlines()
@@ -938,5 +957,126 @@ class EnemyDashEffect extends Enemy
             data.gameObject.width,
             data.gameObject.height
         );
+    }
+}
+
+class TankEnemy extends Enemy
+{
+    constructor(gameState, x, y)
+    {
+        super(gameState, x, y, 30, 30, 100, 5, enemyTypes.tank, 2);
+
+        this.deltaX = 0;
+        this.deltaY = 0;
+        this.shield = 50;
+        this.shieldTimer = 0;
+    }
+
+    takeDamage(amount)
+    {
+        this.shieldTimer = -100;
+
+        if (amount < this.shield)
+        {
+            this.shield -= amount;
+            return amount;
+        } else {
+            let trueDamage = amount - this.shield;
+            let oldHealth = this.health;
+
+            this.shield = 0;
+
+            this.health -= trueDamage;
+
+            if (this.health <= 0)
+            {
+                this.killEnemy();
+                return oldHealth;
+            }
+
+            this.gameObject.width -= trueDamage * 0.1;
+            this.gameObject.height -= trueDamage * 0.1;
+            this.gameObject.x += trueDamage * 0.1;
+            this.gameObject.y += trueDamage * 0.1;
+            this.damage -= trueDamage * 0.04;
+        }
+
+        return amount;
+    }
+
+    healShield()
+    {
+        this.shield += Math.min(Math.max(this.shieldTimer * 0.001, 0), 0.5);
+        this.shieldTimer += 1;
+        if (this.shield > 50) this.shield = 50;
+    }
+
+    move()
+    {
+        let player = this.gameState.gameData.player.gameObject;
+
+        this.deltaX = player.x + 0.5 * player.width - this.gameObject.x - 0.5 *
+            this.gameObject.width;
+        this.deltaY = player.y + 0.5 * player.height - this.gameObject.y - 0.5 *
+            this.gameObject.height;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+
+        this.deltaX /= velocityMag * 0.75;
+        this.deltaY /= velocityMag * 0.75;
+
+        if (!this.isTouchingOtherTank())
+        {
+            this.gameObject.x += this.deltaX;
+            this.gameObject.y += this.deltaY;
+        }
+    }
+
+    isTouchingOtherTank()
+    {
+        if (this.health == 0) return false;
+        for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
+        {
+            if (
+                this.gameObject.collidesWith(
+                    this.gameState.gameData.enemies[i].gameObject
+                ) && (this.gameState.gameData.enemies[i].id != this.id) &&
+                (this.gameState.gameData.enemies[i].type == enemyTypes.tank)
+            ) return true;
+        }
+
+        return false;
+    }
+
+    update(ctx)
+    {
+        this.move();
+        this.boundEnemyOnceEntered();
+        this.healShield();
+        this.collideWithBullets();
+        this.gameObject.update(ctx, this);
+    }
+    
+    draw(ctx, data)
+    {
+        ctx.fillStyle = "Black";
+        ctx.fillRect(
+            data.gameObject.x,
+            data.gameObject.y,
+            data.gameObject.width,
+            data.gameObject.height
+        );
+        
+        if (data.shield > 0)
+        {
+            ctx.strokeStyle = "Gray";
+            ctx.lineWidth = data.shield * 0.2;
+            ctx.strokeRect(
+                data.gameObject.x,
+                data.gameObject.y,
+                data.gameObject.width,
+                data.gameObject.height
+            );
+        }
     }
 }

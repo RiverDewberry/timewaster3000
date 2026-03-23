@@ -57,7 +57,7 @@ class EnemySpawner
     {
         this.gameState = gameState;
 
-        this.gameTime = 500 * 40;
+        this.gameTime = 0;
 
         this.enemySpawnTimer = 0;
         this.enemySpawnTimerTarget = 50;
@@ -280,6 +280,7 @@ class Enemy
         if (this.health < 0)
         {
             this.killEnemy();
+            this.health = 0;
             return oldHealth;
         }
         return amount;
@@ -970,6 +971,8 @@ class TankEnemy extends Enemy
         this.deltaY = 0;
         this.shield = 50;
         this.shieldTimer = 0;
+
+        this.isFollowing = false;
     }
 
     takeDamage(amount)
@@ -1013,6 +1016,20 @@ class TankEnemy extends Enemy
 
     move()
     {
+        let leader = this.getLeaderTank();
+
+        if (leader != null)
+        {
+            this.deltaX = leader.deltaX;
+            this.deltaY = leader.deltaY;
+            this.gameObject.x += this.deltaX;
+            this.gameObject.y += this.deltaY;
+            this.enteredArea = false;
+            this.isFollowing = true;
+            return;
+        }
+        this.isFollowing = false;
+
         let player = this.gameState.gameData.player.gameObject;
 
         this.deltaX = player.x + 0.5 * player.width - this.gameObject.x - 0.5 *
@@ -1022,37 +1039,43 @@ class TankEnemy extends Enemy
 
         let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
 
-        this.deltaX /= velocityMag * 0.75;
-        this.deltaY /= velocityMag * 0.75;
+        this.deltaX /= velocityMag;
+        this.deltaY /= velocityMag;
 
-        if (!this.isTouchingOtherTank())
-        {
-            this.gameObject.x += this.deltaX;
-            this.gameObject.y += this.deltaY;
-        }
+        this.gameObject.x += this.deltaX;
+        this.gameObject.y += this.deltaY;
     }
 
-    isTouchingOtherTank()
+    getLeaderTank()
     {
-        if (this.health == 0) return false;
+        if (this.health == 0) return null;
         for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
         {
+            if (this.gameState.gameData.enemies[i].id == this.id) return null;
+
             if (
                 this.gameObject.collidesWith(
                     this.gameState.gameData.enemies[i].gameObject
-                ) && (this.gameState.gameData.enemies[i].id != this.id) &&
-                (this.gameState.gameData.enemies[i].type == enemyTypes.tank)
-            ) return true;
+                ) && (this.gameState.gameData.enemies[i].type == enemyTypes.tank)
+            ) return this.gameState.gameData.enemies[i];
         }
 
-        return false;
+        return null;
     }
 
     update(ctx)
     {
         this.move();
-        this.boundEnemyOnceEntered();
-        this.healShield();
+
+        if(!this.isFollowing) this.boundEnemyOnceEntered();
+        
+        this.collideWithDashlines();
+
+        if (this.stunned) {
+            this.shield -= 1;
+            if (this.shield < 0) this.shield = 0;
+        } else this.healShield();
+        
         this.collideWithBullets();
         this.gameObject.update(ctx, this);
     }

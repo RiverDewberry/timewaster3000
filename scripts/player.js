@@ -92,7 +92,7 @@ class Player
         this.health -= amount;
         if (this.health <= 0)
         {
-            this.gameState.stop();
+            this.gameState.end();
         }
     }
 
@@ -232,6 +232,7 @@ class Player
 
     draw(ctx, data)
     {
+        if (data.health <= 0) return;
         ctx.strokeStyle = "Lightgrey"
         ctx.lineWidth = 0.2 * data.gameObject.width;
 

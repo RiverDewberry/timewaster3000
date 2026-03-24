@@ -13,6 +13,14 @@ function keysDownRemove(e) {
     };
 }
 
-window.addEventListener('keydown', keysDownAdd);
-window.addEventListener('keyup', keysDownRemove);
-//tracks what keys are down
+function startKeyDownListen()
+{
+    window.addEventListener('keydown', keysDownAdd);
+    window.addEventListener('keyup', keysDownRemove);
+}
+
+function endKeyDownListen()
+{
+    window.removeEventListener('keydown', keysDownAdd);
+    window.removeEventListener('keyup', keysDownRemove);
+}

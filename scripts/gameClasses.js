@@ -7,6 +7,8 @@ class GameObject
         this.width = width;
         this.height = height;
         this.displayFunction = displayFunction;
+
+        this.isPaused = false;
     }
 
     update(ctx, data)
@@ -28,12 +30,18 @@ class GameObject
 
 class GameState
 {
-    constructor(canvasID, width, height, tickSpeed)
+    constructor(ctx, tickSpeed, callback)
     {
-        this.canvas = document.getElementById(canvasID);
-        this.canvas.width = width;
-        this.canvas.height = height;
-        this.ctx = this.canvas.getContext("2d");
+        this.ctx = ctx;
+
+        this.initSession();
+
+        this.tickSpeed = tickSpeed;
+        this.endCallback = callback;
+    }
+
+    initSession()
+    {
         this.gameObjects = [];
         this.tempObjects = [];
         this.gameData = {
@@ -43,7 +51,6 @@ class GameState
             bullets: [],
             enemies: []
         };
-        this.tickSpeed = tickSpeed;
         this.idCounter = 0;
     }
 
@@ -54,10 +61,10 @@ class GameState
             let tempObject = gameState.tempObjects.pop();
             gameState.internalObjectAddFunction(tempObject.obj, tempObject.order);
         }
-        gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height)
+        gameState.ctx.clearRect(0, 0, 500, 500);
         for (let i = 0; i < gameState.gameObjects.length; i++)
         {
-            gameState.gameObjects[i].update(gameState.ctx);
+            if (gameState.running) gameState.gameObjects[i].update(gameState.ctx);
         }
         for (let i = 0; i < gameState.gameObjects.length; i++)
         {
@@ -68,14 +75,32 @@ class GameState
         }
     }
 
-    start()
+    begin()
     {
+        this.running = true;
+        this.initSession();
+        new Player(this);
+        new EnemySpawner(this);
         this.intervalTracker = setInterval(this.tick, this.tickSpeed, this);
     }
 
-    stop()
+    resume()
     {
-        clearInterval(this.intervalTracker)
+        this.isPaused = false;
+        this.intervalTracker = setInterval(this.tick, this.tickSpeed, this);
+    }
+
+    pause()
+    {
+        this.isPaused = true;
+        clearInterval(this.intervalTracker);
+    }
+
+    end()
+    {
+        clearInterval(this.intervalTracker);
+        this.endCallback();
+        this.running = false;
     }
 
     internalObjectAddFunction(gameObject, drawOrder)

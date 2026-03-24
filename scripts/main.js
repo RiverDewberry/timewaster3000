@@ -20,6 +20,7 @@ const menu = {
         
         ctx.font = "25px Monospace";
         ctx.fillStyle = "Black";
+
         if (menu.firstRun) {
 
             ctx.fillText("Press [Enter] to start game", 20, 50);
@@ -37,9 +38,40 @@ const menu = {
             startKeyDownListen();
             gameState.begin();
         }
+    },
+
+    enterPauseMenu: function()
+    {
+        gameState.pause();
+        endKeyDownListen();
+        window.addEventListener("keydown", menu.pauseMenuLoop);
+        
+        ctx.fillStyle = "#00000040";
+        ctx.fillRect(0, 0, 500, 500);
+
+        ctx.font = "25px Monospace";
+        ctx.fillStyle = "Black";
+        ctx.strokeStyle = "White";
+        ctx.miterLimit = 2;
+        ctx.lineJoin = 'circle';
+
+        let tempText = "Paused - Score: " + Math.round(gameState.gameData.enemySpawner.gameTime / 40);
+
+        ctx.strokeText(tempText, 20, 50);
+        ctx.fillText(tempText, 20, 50);
+    },
+
+    pauseMenuLoop: function(e)
+    {
+        if (e.key == "p")
+        {
+            window.removeEventListener("keydown", menu.pauseMenuLoop);
+            startKeyDownListen();
+            gameState.resume();
+        }
     }
 }
 
-const gameState = new GameState(ctx, 25, menu.enterStartMenu);
+const gameState = new GameState(ctx, 25, menu.enterStartMenu, menu.enterPauseMenu);
 
 menu.enterStartMenu();

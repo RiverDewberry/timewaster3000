@@ -30,7 +30,7 @@ class GameObject
 
 class GameState
 {
-    constructor(ctx, tickSpeed, callback)
+    constructor(ctx, tickSpeed, callback, pause)
     {
         this.ctx = ctx;
 
@@ -38,6 +38,7 @@ class GameState
 
         this.tickSpeed = tickSpeed;
         this.endCallback = callback;
+        this.pauseMenu = pause;
     }
 
     initSession()
@@ -73,6 +74,7 @@ class GameState
                 gameState.gameObjects.splice(i, 1);
             }
         }
+        if (keysDown.includes("p")) gameState.pauseMenu();
     }
 
     begin()

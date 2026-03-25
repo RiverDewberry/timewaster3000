@@ -5,73 +5,122 @@ const ctx = canvas.getContext("2d");
 
 const menu = {
 
-    firstRun: true,
+    currentMenu: null,
+    menuShown: false,
 
-    enterStartMenu: function()
+    switchMenu: function (newMenu)
     {
-        endKeyDownListen();
-        menu.startMenuLoop({key: ""});
-        window.addEventListener("keydown", menu.startMenuLoop);
+        menu.removeMenu();
+        menu.currentMenu = newMenu;
+        menu.menuShown = true;
+        menu.currentMenu.enter();
+        window.addEventListener("keydown", menu.currentMenu.loop);
     },
 
-    startMenuLoop: function(e)
+    removeMenu: function ()
     {
-        gameState.ctx.clearRect(0, 0, 500, 500);
-        
-        ctx.font = "25px Monospace";
-        ctx.fillStyle = "Black";
+        if (menu.menuShown)
+        {
+            window.removeEventListener("keydown", menu.currentMenu.loop);
+            menu.menuShown = false;
+        }
+    },
 
-        if (menu.firstRun) {
+    startGameMenu: {
+        enter: function()
+        {
+            endKeyDownListen();
+            menu.startGameMenu.loop({key: ""});
+        },
+
+        loop: function(e)
+        {
+            gameState.ctx.clearRect(0, 0, 500, 500);
+        
+            ctx.font = "25px Monospace";
+            ctx.fillStyle = "Black";
 
             ctx.fillText("Press [Enter] to start game", 20, 50);
-        } else {
+
+            if (e.key == "Enter")
+            {
+                menu.removeMenu();
+                startKeyDownListen();
+                gameState.begin();
+            }
+        }
+    },
+
+    pauseMenu: {
+        enter: function()
+        {
+            gameState.pause();
+            endKeyDownListen();
+        
+            ctx.fillStyle = "#00000040";
+            ctx.fillRect(0, 0, 500, 500);
+
+            ctx.font = "25px Monospace";
+            ctx.fillStyle = "Black";
+            ctx.strokeStyle = "White";
+            ctx.miterLimit = 2;
+            ctx.lineJoin = 'circle';
+
+            let tempText = "Paused - Score: " +
+                Math.round(gameState.gameData.enemySpawner.gameTime / 40);
+
+            ctx.strokeText(tempText, 20, 50);
+            ctx.fillText(tempText, 20, 50);
+        },
+
+        loop: function(e)
+        {
+            if (e.key == "p")
+            {
+                menu.removeMenu();
+                startKeyDownListen();
+                gameState.resume();
+            }
+        }
+    },
+
+    deathMenu: {
+        enter: function()
+        {
+            ctx.fillStyle = "#00000040";
+            ctx.fillRect(0, 0, 500, 500);
+
+            ctx.font = "25px Monospace";
+            ctx.fillStyle = "Black";
+            ctx.strokeStyle = "White";
+            ctx.miterLimit = 2;
+            ctx.lineJoin = 'circle';
+
+            ctx.strokeText("You died with a score of " +
+                Math.round(gameState.gameData.enemySpawner.gameTime / 40), 20, 50);
+            ctx.strokeText("Press [Enter] to continue", 20, 100);
 
             ctx.fillText("You died with a score of " +
                 Math.round(gameState.gameData.enemySpawner.gameTime / 40), 20, 50);
-            ctx.fillText("Press [Enter] to respawn", 20, 100);
-        }
+            ctx.fillText("Press [Enter] to continue", 20, 100);
 
-        if (e.key == "Enter")
+            endKeyDownListen();
+        },
+
+        loop: function(e)
         {
-            if (menu.firstRun) menu.firstRun = false;
-            window.removeEventListener("keydown", menu.startMenuLoop);
-            startKeyDownListen();
-            gameState.begin();
-        }
-    },
-
-    enterPauseMenu: function()
-    {
-        gameState.pause();
-        endKeyDownListen();
-        window.addEventListener("keydown", menu.pauseMenuLoop);
-        
-        ctx.fillStyle = "#00000040";
-        ctx.fillRect(0, 0, 500, 500);
-
-        ctx.font = "25px Monospace";
-        ctx.fillStyle = "Black";
-        ctx.strokeStyle = "White";
-        ctx.miterLimit = 2;
-        ctx.lineJoin = 'circle';
-
-        let tempText = "Paused - Score: " + Math.round(gameState.gameData.enemySpawner.gameTime / 40);
-
-        ctx.strokeText(tempText, 20, 50);
-        ctx.fillText(tempText, 20, 50);
-    },
-
-    pauseMenuLoop: function(e)
-    {
-        if (e.key == "p")
-        {
-            window.removeEventListener("keydown", menu.pauseMenuLoop);
-            startKeyDownListen();
-            gameState.resume();
+            if (e.key == "Enter")
+            {
+                startKeyDownListen();
+                menu.switchMenu(menu.startGameMenu);
+            }
         }
     }
 }
 
-const gameState = new GameState(ctx, 25, menu.enterStartMenu, menu.enterPauseMenu);
+const gameState = new GameState(ctx, 25,
+    function() {menu.switchMenu(menu.deathMenu);},
+    function() {menu.switchMenu(menu.pauseMenu);}
+);
 
-menu.enterStartMenu();
+menu.switchMenu(menu.startGameMenu);

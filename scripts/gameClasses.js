@@ -77,12 +77,12 @@ class GameState
         if (keysDown.includes("p")) gameState.pauseMenu();
     }
 
-    begin()
+    begin(difficulty)
     {
         this.running = true;
         this.initSession();
         new Player(this);
-        new EnemySpawner(this);
+        new EnemySpawner(this, difficulty);
         this.intervalTracker = setInterval(this.tick, this.tickSpeed, this);
     }
 

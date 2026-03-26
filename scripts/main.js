@@ -8,6 +8,11 @@ const menu = {
     currentMenu: null,
     menuShown: false,
 
+    data: {
+        difficultyRatings: [0.5, 1, 2],
+        option: 1
+    },
+
     switchMenu: function (newMenu)
     {
         menu.removeMenu();
@@ -37,16 +42,38 @@ const menu = {
         {
             gameState.ctx.clearRect(0, 0, 500, 500);
         
-            ctx.font = "25px Monospace";
+            ctx.font = "40px Monospace";
             ctx.fillStyle = "Black";
 
-            ctx.fillText("Press [Enter] to start game", 20, 50);
+            ctx.fillText("Time Waster 3000", 20, 50);
+            
+            ctx.font = "15px Monospace";
+            ctx.fillText("Use arrow keys and enter to navigate menu", 20, 75);
+
+            ctx.font = "25px Monospace";
+            ctx.fillText("  ] Start game (easy)", 20, 110);
+            ctx.fillText("  ] Start game (normal)", 20, 140);
+            ctx.fillText("  ] Start game (hard)", 20, 170);
+
+            if (e.key == "ArrowDown") menu.data.option++;
+            else if (e.key == "ArrowUp") menu.data.option--;
+
+            if (menu.data.option < 0) menu.data.option = 0;
+            if (menu.data.option > 2) menu.data.option = 2;
+
+            for (let i = 0; i < 3; i++)
+            {
+                ctx.fillText((i == menu.data.option) ? "[x" : "[ ", 20, 110 + 30 * i);
+            }
 
             if (e.key == "Enter")
             {
-                menu.removeMenu();
-                startKeyDownListen();
-                gameState.begin();
+                if (menu.data.option >= 0 && menu.data.option <= 2)
+                {
+                    menu.removeMenu();
+                    startKeyDownListen();
+                    gameState.begin(menu.data.difficultyRatings[menu.data.option]);
+                }
             }
         }
     },

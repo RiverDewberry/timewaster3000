@@ -53,10 +53,11 @@ for (let i = 0; i < enemyScaling.length; i++)
 
 class EnemySpawner
 {
-    constructor(gameState)
+    constructor(gameState, difficulty)
     {
         this.gameState = gameState;
 
+        this.difficulty = difficulty;
         this.gameTime = 0;
 
         this.enemySpawnTimer = 0;
@@ -68,7 +69,7 @@ class EnemySpawner
 
     update(ctx)
     {
-        this.gameTime += 1;
+        this.gameTime += this.difficulty;
         this.enemySpawnTimer += 1;
         if (this.enemySpawnTimer > this.enemySpawnTimerTarget)
         {

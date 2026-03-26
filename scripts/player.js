@@ -424,8 +424,14 @@ class Bullet
             this.deltaX +=  (15 - player.dashTimer) * player.dashDirection.x;
             this.deltaY +=  (15 - player.dashTimer) * player.dashDirection.y;
         } else {
-            this.deltaX += player.deltaX;
-            this.deltaY += player.deltaY;
+            if (player.slowed)
+            {
+                this.deltaX += player.deltaX * 0.2;
+                this.deltaY += player.deltaY * 0.2;
+            } else {
+                this.deltaX += player.deltaX;
+                this.deltaY += player.deltaY;
+            }
         }
 
         this.deltaTotal = Math.sqrt(

@@ -45,7 +45,7 @@ const enemyScaling = [
     },
 
     {
-        scaleStart: 0,
+        scaleStart: 50,
         scaleEnd: 400,
         fullWeight: 1,
         delayFactor: 10,
@@ -64,22 +64,16 @@ const enemyScaling = [
             playerY -= 250;
 
             let theta = Math.atan2(playerY, playerX);
-            theta += Math.PI - 1.8;
+            theta += Math.PI - 0.9;
 
             for (let i = 0; i < 7; i++)
             {
-                theta += 0.6;
+                theta += 0.3;
 
                 let spawnX, spawnY;
 
-                spawnX = Math.cos(theta);
-                spawnY = Math.sin(theta);
-
-                let scale = Math.max(Math.abs(spawnX), Math.abs(spawnY));
-                spawnX /= scale;
-                spawnY /= scale;
-                spawnX *= 275;
-                spawnY *= 275;
+                spawnX = Math.cos(theta) * 375;
+                spawnY = Math.sin(theta) * 375;
 
                 new BasicEnemy(gs, spawnX + 250, spawnY + 250);
             }

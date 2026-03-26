@@ -43,6 +43,49 @@ const enemyScaling = [
         spawn: function(gs, x, y) {new TankEnemy(gs, x, y);},
         curentWeight: null
     },
+
+    {
+        scaleStart: 0,
+        scaleEnd: 400,
+        fullWeight: 1,
+        delayFactor: 10,
+        spawn: function(gs, x, y) {
+
+            let playerX = gameState.gameData.player.gameObject.x;
+            let playerY = gameState.gameData.player.gameObject.y;
+
+            if (playerX == 250 && playerY == 250)
+            {
+                playerX += Math.random();
+                playerY += Math.random();
+            }
+
+            playerX -= 250;
+            playerY -= 250;
+
+            let theta = Math.atan2(playerY, playerX);
+            theta += Math.PI - 1.8;
+
+            for (let i = 0; i < 7; i++)
+            {
+                theta += 0.6;
+
+                let spawnX, spawnY;
+
+                spawnX = Math.cos(theta);
+                spawnY = Math.sin(theta);
+
+                let scale = Math.max(Math.abs(spawnX), Math.abs(spawnY));
+                spawnX /= scale;
+                spawnY /= scale;
+                spawnX *= 275;
+                spawnY *= 275;
+
+                new BasicEnemy(gs, spawnX + 250, spawnY + 250);
+            }
+        },
+        curentWeight: null
+    }
 ];
 
 for (let i = 0; i < enemyScaling.length; i++)
@@ -87,22 +130,20 @@ class EnemySpawner
         ctx.fillText(Math.round(data.gameTime * 0.025), 5, 15);
     }
 
-    spawnEnemy()
+    getSpawnLocation()
     {
-        let spawnX, spawnY;
+        let spawnX = Math.random() * 500;
+        let spawnY = Math.random() * 500;
 
-        spawnX = Math.random() * 500;
-        spawnY = Math.random() * 500;
-        
         if (Math.abs(spawnX - 250) > Math.abs(spawnY - 250))
         {
             spawnX = Math.round(spawnX / 500) * 500;
             spawnX += (spawnX == 0)? -50 : 50;
-            this.spawnY -= 5;
+            spawnY -= 5;
         } else {
             spawnY = Math.round(spawnX / 500) * 500;
             spawnY += (spawnY == 0)? -50 : 50;
-            this.spawnX -= 5;
+            spawnX -= 5;
         }
 
         if (Math.sqrt(
@@ -116,6 +157,15 @@ class EnemySpawner
             else if (spawnY < 0) spawnY = 550;
             else spawnY = -50;
         }
+
+        return {x: spawnX, y: spawnY};
+    }
+
+    spawnEnemy()
+    {
+        let spawnLocation = this.getSpawnLocation();
+        let spawnX = spawnLocation.x;
+        let spawnY = spawnLocation.y;
 
         let totalWeight = 0;
         for (let i = 0; i < enemyScaling.length; i++)

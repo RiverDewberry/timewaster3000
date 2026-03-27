@@ -86,11 +86,14 @@ class Player
             }
         }
 
-        if (this.health < 15)
+        if (this.health > 0)
         {
-            this.health += 0.002;
+            if (this.health < 15)
+            {
+                this.health += 0.002;
+            }
+            else this.health = 15;
         }
-        else this.health = 15;
 
         if (exitGamePressed())
         {
@@ -106,6 +109,7 @@ class Player
         this.health -= amount;
         if (this.health <= 0)
         {
+            this.health = 0;
             this.gameState.end();
         }
     }

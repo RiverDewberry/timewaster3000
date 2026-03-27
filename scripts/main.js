@@ -59,9 +59,13 @@ const menu = {
             ctx.fillText("Time Waster 3000", 20, 50);
             
             ctx.font = "15px Monospace";
+            ctx.fillText("https://riverdewberry.dev", 20, 460);
+            ctx.fillText("No AI was used in the creation of this game.", 20, 480);
+            ctx.fillStyle = "#f00";
             ctx.fillText("Use arrow keys and enter to navigate menu", 20, 75);
-
             ctx.font = "25px Monospace";
+            ctx.fillStyle = "#000";
+
             ctx.fillText("  ] Start game (easy)", 20, 110);
             ctx.fillText("  ] Start game (normal)", 20, 140);
             ctx.fillText("  ] Start game (hard)", 20, 170);
@@ -117,7 +121,12 @@ const menu = {
             ctx.fillText("Time Waster 3000", 20, 50);
             
             ctx.font = "15px Monospace";
+            ctx.fillText("https://riverdewberry.dev", 20, 460);
+            ctx.fillText("No AI was used in the creation of this game.", 20, 480);
+            ctx.fillStyle = "#f00";
             ctx.fillText("Use arrow keys and enter to navigate menu", 20, 75);
+            ctx.font = "25px Monospace";
+            ctx.fillStyle = "#000";
 
             if (e.key == "ArrowDown") menu.data.option++;
             else if (e.key == "ArrowUp") menu.data.option--;
@@ -162,8 +171,6 @@ const menu = {
                         break;
                 }
             }
-
-            ctx.font = "25px Monospace";
 
             ctx.fillText((menu.data.option == 0) ? "[x" : "[ ", 20, 110);
             if (menu.data.option > 0) ctx.fillText("(edit)", 20, 140 + 30 * menu.data.option);
@@ -218,6 +225,15 @@ const menu = {
                 startKeyDownListen();
                 gameState.resume();
             }
+
+            if (e.key == menu.data.controls.exitGame)
+            {
+                menu.removeMenu();
+                startKeyDownListen();
+                gameState.gameData.player.health = -1;
+                gameState.tick(gameState);
+                menu.switchMenu(menu.deathMenu);
+            }
         }
     },
 
@@ -230,6 +246,7 @@ const menu = {
             ctx.font = "25px Monospace";
             ctx.fillStyle = "Black";
             ctx.strokeStyle = "White";
+            ctx.lineWidth = 4;
             ctx.miterLimit = 2;
             ctx.lineJoin = 'circle';
 

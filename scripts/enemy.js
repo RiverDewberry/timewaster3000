@@ -20,7 +20,7 @@ const enemyScaling = [
     {
         scaleStart: 10,
         scaleEnd: 130,
-        fullWeight: 3,
+        fullWeight: 4,
         delayFactor: 1.25,
         spawn: function(gs, x, y) {new ArcherEnemy(gs, x, y);},
         curentWeight: null
@@ -29,7 +29,7 @@ const enemyScaling = [
     {
         scaleStart: 70,
         scaleEnd: 220,
-        fullWeight: 2,
+        fullWeight: 3,
         delayFactor: 2,
         spawn: function(gs, x, y) {new DashEnemy(gs, x, y);},
         curentWeight: null
@@ -38,7 +38,7 @@ const enemyScaling = [
     {
         scaleStart: 170,
         scaleEnd: 340,
-        fullWeight: 1,
+        fullWeight: 2,
         delayFactor: 5,
         spawn: function(gs, x, y) {new TankEnemy(gs, x, y);},
         curentWeight: null

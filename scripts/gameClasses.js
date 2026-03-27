@@ -1,3 +1,5 @@
+function pausePressed() {return keysDown.includes(menu.data.controls.pause);}
+
 class GameObject
 {
     constructor(x, y, width, height, displayFunction)
@@ -74,7 +76,7 @@ class GameState
                 gameState.gameObjects.splice(i, 1);
             }
         }
-        if (keysDown.includes("p")) gameState.pauseMenu();
+        if (pausePressed()) gameState.pauseMenu();
     }
 
     begin(difficulty)

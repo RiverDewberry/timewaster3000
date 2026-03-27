@@ -1,5 +1,13 @@
 const playerStates = {move: 0, dash: 1, dead: 2};
 
+function acceleratePressed() {return keysDown.includes(menu.data.controls.accelerate);}
+function deceleratePressed() {return keysDown.includes(menu.data.controls.decelerate);}
+function turnLeftPressed() {return keysDown.includes(menu.data.controls.turnLeft);}
+function turnRightPressed() {return keysDown.includes(menu.data.controls.turnRight);}
+function shootPressed() {return keysDown.includes(menu.data.controls.shoot);}
+function dashPressed() {return keysDown.includes(menu.data.controls.dash);}
+function exitGamePressed() {return keysDown.includes(menu.data.controls.exitGame);}
+
 class Player
 {
     constructor(gameState)
@@ -84,6 +92,12 @@ class Player
         }
         else this.health = 15;
 
+        if (exitGamePressed())
+        {
+            this.health = -1;
+            gameState.end();
+        }
+
         this.gameObject.update(ctx, this);
     }
 
@@ -98,7 +112,7 @@ class Player
 
     move()
     {
-        if (keysDown.includes("x") && this.dashCount >= 1)
+        if (dashPressed() && this.dashCount >= 1)
         {
             this.state = playerStates.dash;
             this.dashCount -= 1;
@@ -118,10 +132,10 @@ class Player
         this.deltaY *= 0.995;
         if (this.acceleration > 1) this.acceleration = 1;
         
-        if (keysDown.includes("ArrowUp")) this.acceleration += 0.15;
+        if (acceleratePressed()) this.acceleration += 0.15;
         else this.acceleration = 0;
 
-        if (keysDown.includes("ArrowDown"))
+        if (deceleratePressed())
         {
             this.acceleration *= 0.65;
             this.acceleration -= 0.01;
@@ -132,9 +146,9 @@ class Player
             if (this.acceleration < 0) this.acceleration = 0;
         }
 
-        if (keysDown.includes("ArrowLeft")) this.angle -= 10 /
+        if (turnLeftPressed()) this.angle -= 10 /
             (0.75 + this.acceleration * 1.25) * Math.PI / 180;
-        if (keysDown.includes("ArrowRight")) this.angle += 10 /
+        if (turnRightPressed()) this.angle += 10 /
             (0.75 + this.acceleration * 1.25) * Math.PI / 180;
         
         this.deltaX += Math.cos(this.angle) * this.acceleration;
@@ -156,7 +170,7 @@ class Player
 
     shoot()
     {
-        if (keysDown.includes(" ") && (this.shotDelayTimer <= 0) && (this.ammo > 0))
+        if (shootPressed() && (this.shotDelayTimer <= 0) && (this.ammo > 0))
         {
             new Bullet(this.gameState, this);
             this.ammo -= 1;
@@ -180,8 +194,8 @@ class Player
         this.deltaX = 5 * this.dashDirection.x;
         this.deltaY = 5 * this.dashDirection.y;
 
-        if (keysDown.includes("ArrowLeft")) this.angle -= Math.PI / 20;
-        if (keysDown.includes("ArrowRight")) this.angle += Math.PI / 20;
+        if (turnLeftPressed()) this.angle -= Math.PI / 20;
+        if (turnRightPressed()) this.angle += Math.PI / 20;
 
         this.dashTimer += 1;
         if (this.dashTimer >= 10)
@@ -196,7 +210,7 @@ class Player
             this.deltaY = 5 * this.dashDirection.y;
             this.findDashDirection();
 
-            if (keysDown.includes("x") && this.dashCount >= 1)
+            if (dashPressed() && this.dashCount >= 1)
             {
                 this.state = playerStates.dash;
                 this.dashCount -= 1;

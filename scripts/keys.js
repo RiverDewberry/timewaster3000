@@ -23,4 +23,6 @@ function endKeyDownListen()
 {
     window.removeEventListener('keydown', keysDownAdd);
     window.removeEventListener('keyup', keysDownRemove);
+    
+    keysDown = [];
 }

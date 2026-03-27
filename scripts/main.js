@@ -71,18 +71,18 @@ const menu = {
             ctx.fillText("  ] Start game (hard)", 20, 170);
             ctx.fillText("  ] View/edit controls", 20, 200);
 
-            if (e.key == "ArrowDown") menu.data.option++;
-            else if (e.key == "ArrowUp") menu.data.option--;
+            if (e.key === "ArrowDown") menu.data.option++;
+            else if (e.key === "ArrowUp") menu.data.option--;
 
             if (menu.data.option < 0) menu.data.option = 0;
             if (menu.data.option > 2) menu.data.option = 3;
 
             for (let i = 0; i < 4; i++)
             {
-                ctx.fillText((i == menu.data.option) ? "[x" : "[ ", 20, 110 + 30 * i);
+                ctx.fillText((i === menu.data.option) ? "[x" : "[ ", 20, 110 + 30 * i);
             }
 
-            if (e.key == "Enter")
+            if (e.key === "Enter")
             {
                 if (menu.data.option >= 0 && menu.data.option <= 2)
                 {
@@ -128,15 +128,15 @@ const menu = {
             ctx.font = "25px Monospace";
             ctx.fillStyle = "#000";
 
-            if (e.key == "ArrowDown") menu.data.option++;
-            else if (e.key == "ArrowUp") menu.data.option--;
+            if (e.key === "ArrowDown") menu.data.option++;
+            else if (e.key === "ArrowUp") menu.data.option--;
 
             if (menu.data.option < 0) menu.data.option = 0;
             if (menu.data.option > 7) menu.data.option = 8;
 
-            if (e.key == "Enter")
+            if (e.key === "Enter")
             {
-                if (menu.data.option == 0)
+                if (menu.data.option === 0)
                 {
                     startKeyDownListen();
                     menu.switchMenu(menu.startGameMenu);
@@ -172,7 +172,7 @@ const menu = {
                 }
             }
 
-            ctx.fillText((menu.data.option == 0) ? "[x" : "[ ", 20, 110);
+            ctx.fillText((menu.data.option === 0) ? "[x" : "[ ", 20, 110);
             if (menu.data.option > 0) ctx.fillText("(edit)", 20, 140 + 30 * menu.data.option);
 
             ctx.fillText("  ] Back to main menu", 20, 110);
@@ -219,14 +219,14 @@ const menu = {
 
         loop: function(e)
         {
-            if (e.key == menu.data.controls.pause)
+            if (e.key === menu.data.controls.pause)
             {
                 menu.removeMenu();
                 startKeyDownListen();
                 gameState.resume();
             }
 
-            if (e.key == menu.data.controls.exitGame)
+            if (e.key === menu.data.controls.exitGame)
             {
                 menu.removeMenu();
                 startKeyDownListen();
@@ -250,12 +250,12 @@ const menu = {
             ctx.miterLimit = 2;
             ctx.lineJoin = 'circle';
 
-            ctx.strokeText(((gameState.gameData.player.health == 0) ? "You died" : "Game ended") +
+            ctx.strokeText(((gameState.gameData.player.health === 0) ? "You died" : "Game ended") +
                 " with a score of " +
                 Math.round(gameState.gameData.enemySpawner.gameTime / 40), 20, 50);
             ctx.strokeText("Press [Enter] to continue", 20, 100);
 
-            ctx.fillText(((gameState.gameData.player.health == 0) ? "You died" : "Game ended") +
+            ctx.fillText(((gameState.gameData.player.health === 0) ? "You died" : "Game ended") +
                 " with a score of " +
                 Math.round(gameState.gameData.enemySpawner.gameTime / 40), 20, 50);
             ctx.fillText("Press [Enter] to continue", 20, 100);
@@ -265,7 +265,7 @@ const menu = {
 
         loop: function(e)
         {
-            if (e.key == "Enter")
+            if (e.key === "Enter")
             {
                 startKeyDownListen();
                 menu.switchMenu(menu.startGameMenu);

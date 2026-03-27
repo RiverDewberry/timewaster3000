@@ -39,8 +39,8 @@ class Player
 
     update(ctx)
     {
-        if (this.state == playerStates.move) this.move();
-        else if (this.state == playerStates.dash) this.dash();
+        if (this.state === playerStates.move) this.move();
+        else if (this.state === playerStates.dash) this.dash();
 
         this.shoot();
 
@@ -76,7 +76,7 @@ class Player
             ) && this.gameState.gameData.enemies[i].canDamagePlayer(this))
             {
 
-                if (this.gameState.gameData.enemies[i].type == enemyTypes.dashLine)
+                if (this.gameState.gameData.enemies[i].type === enemyTypes.dashLine)
                 {
                     this.slowed = true;
                 } else {
@@ -261,7 +261,7 @@ class Player
             data.gameObject.height * 2
         );
 
-        if (data.state != playerStates.dash)
+        if (data.state !== playerStates.dash)
         {
             ctx.fillStyle = "Black";
             ctx.fillRect(
@@ -297,7 +297,7 @@ class Player
         ctx.fillStyle = "rgb(211, 211, 211)";
         if (data.dashCount >= 1) ctx.fillStyle = "rgb(147, 213, 147)";
         if (data.dashCount >= 2) ctx.fillStyle = "rgb(80, 229, 80)";
-        if (data.dashCount == 3) ctx.fillStyle = "rgb(0, 255, 0)";
+        if (data.dashCount === 3) ctx.fillStyle = "rgb(0, 255, 0)";
 
         ctx.fillRect(
             data.gameObject.x + data.gameObject.width * 
@@ -314,7 +314,7 @@ class Player
         xDirection /= directionScale;
         yDirection /= directionScale;
 
-        if (this.ammo != 15)
+        if (this.ammo !== 15)
             ctx.fillRect(
                 data.gameObject.x + data.gameObject.width * 
                     (0.3 + xDirection - 0.05 * (Math.max(0, data.shotDelayTimer))),
@@ -390,7 +390,7 @@ class DashEffect
             }
         }
 
-        if (this.timer == 110) this.killDash();
+        if (this.timer === 110) this.killDash();
 
         this.timer += 1;
 
@@ -414,7 +414,7 @@ class DashEffect
         this.kill = true;
         for (let i = 0; i < this.gameState.gameData.dashlines.length; i++)
         {
-            if (this.gameState.gameData.dashlines[i].id == this.id)
+            if (this.gameState.gameData.dashlines[i].id === this.id)
             {
                 this.gameState.gameData.dashlines.splice(i, 1);
                 return;
@@ -437,7 +437,7 @@ class Bullet
         this.deltaX = Math.cos(player.angle) * 7.5;
         this.deltaY = Math.sin(player.angle) * 7.5;
 
-        if (player.state == playerStates.dash)
+        if (player.state === playerStates.dash)
         {
             this.deltaX +=  (15 - player.dashTimer) * player.dashDirection.x;
             this.deltaY +=  (15 - player.dashTimer) * player.dashDirection.y;
@@ -528,7 +528,7 @@ class Bullet
         this.kill = true;
         for (let i = 0; i < this.gameState.gameData.bullets.length; i++)
         {
-            if (this.gameState.gameData.bullets[i].id == this.id)
+            if (this.gameState.gameData.bullets[i].id === this.id)
             {
                 this.gameState.gameData.bullets.splice(i, 1);
                 return;

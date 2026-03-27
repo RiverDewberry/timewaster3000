@@ -54,7 +54,7 @@ const enemyScaling = [
             let playerX = gameState.gameData.player.gameObject.x;
             let playerY = gameState.gameData.player.gameObject.y;
 
-            if (playerX == 250 && playerY == 250)
+            if (playerX === 250 && playerY === 250)
             {
                 playerX += Math.random();
                 playerY += Math.random();
@@ -132,11 +132,11 @@ class EnemySpawner
         if (Math.abs(spawnX - 250) > Math.abs(spawnY - 250))
         {
             spawnX = Math.round(spawnX / 500) * 500;
-            spawnX += (spawnX == 0)? -50 : 50;
+            spawnX += (spawnX === 0)? -50 : 50;
             spawnY -= 5;
         } else {
             spawnY = Math.round(spawnX / 500) * 500;
-            spawnY += (spawnY == 0)? -50 : 50;
+            spawnY += (spawnY === 0)? -50 : 50;
             spawnX -= 5;
         }
 
@@ -275,7 +275,7 @@ class Enemy
         this.health = 0;
         for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
         {
-            if (this.gameState.gameData.enemies[i].id == this.id)
+            if (this.gameState.gameData.enemies[i].id === this.id)
             {
                 this.gameState.gameData.enemies.splice(i, 1);
                 return;
@@ -346,7 +346,7 @@ class Enemy
 
     canDamagePlayer(player)
     {
-        return !((player.state == playerStates.dash) || this.stunned);
+        return !((player.state === playerStates.dash) || this.stunned);
     }
 }
 
@@ -379,10 +379,10 @@ class BasicEnemy extends Enemy
 
         let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
 
-        if ((enemyCenterX + this.deltaX > playerCenterX) != (this.deltaX < 0))
+        if ((enemyCenterX + this.deltaX > playerCenterX) !== (this.deltaX < 0))
             this.deltaX *= 1 - (this.power - 1) * 0.005;
 
-        if ((enemyCenterY + this.deltaY > playerCenterY) != (this.deltaY < 0))
+        if ((enemyCenterY + this.deltaY > playerCenterY) !== (this.deltaY < 0))
             this.deltaY *= 1 - (this.power - 1) * 0.005;
 
         let newSpeed = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
@@ -398,7 +398,7 @@ class BasicEnemy extends Enemy
 
         this.collideWithDashlines();
 
-        if (this.stunned == false)
+        if (this.stunned === false)
         {
             this.gameObject.x += this.deltaX;
             this.gameObject.y += this.deltaY;
@@ -420,14 +420,14 @@ class BasicEnemy extends Enemy
 
     mergeWithBasicEnemies()
     {
-        if (this.health == 0) return;
+        if (this.health === 0) return;
         for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
         {
             if (
                 this.gameObject.collidesWith(
                     this.gameState.gameData.enemies[i].gameObject
-                ) && (this.gameState.gameData.enemies[i].id != this.id) &&
-                (this.gameState.gameData.enemies[i].type == enemyTypes.basic)
+                ) && (this.gameState.gameData.enemies[i].id !== this.id) &&
+                (this.gameState.gameData.enemies[i].type === enemyTypes.basic)
             )
             {
                 
@@ -520,7 +520,7 @@ class ArcherEnemy extends Enemy
 
     shoot()
     {
-        if (this.health == 0 || this.stunned) return;
+        if (this.health === 0 || this.stunned) return;
 
         let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
         
@@ -614,7 +614,7 @@ class ArcherEnemy extends Enemy
 
         this.collideWithDashlines();
 
-        if (this.stunned == false)
+        if (this.stunned === false)
         {
             this.gameObject.x += this.deltaX;
             this.gameObject.y += this.deltaY;
@@ -659,7 +659,7 @@ class ArcherEnemy extends Enemy
 
     canDamagePlayer(player)
     {
-        return !(player.state == playerStates.dash);
+        return !(player.state === playerStates.dash);
     }
 }
 
@@ -696,7 +696,7 @@ class ArcherProjectile extends Enemy
         if (this.health < 0) return;
         this.collideWithDashlines();
 
-        if (this.stunned == true) this.killEnemy();
+        if (this.stunned === true) this.killEnemy();
 
         this.gameObject.update(ctx, this);
     }
@@ -772,7 +772,7 @@ class DashEnemy extends Enemy
     {
         if (this.dashTimer < 10)
         {
-            if (this.dashTimer == 0)
+            if (this.dashTimer === 0)
             {
                 new EnemyDashEffect(this.gameState, this);
             }
@@ -843,7 +843,7 @@ class DashEnemy extends Enemy
             this.deltaY /= velocityMag / this.maxSpeed;
         }
 
-        if (this.stunned == false)
+        if (this.stunned === false)
         {
             this.gameObject.x += this.deltaX;
             this.gameObject.y += this.deltaY;
@@ -931,7 +931,7 @@ class DashEnemy extends Enemy
 
     canDamagePlayer(player)
     {
-        return !((player.state == playerStates.dash) || (this.dashTimer < 10));
+        return !((player.state === playerStates.dash) || (this.dashTimer < 10));
     }
 }
 
@@ -986,7 +986,7 @@ class EnemyDashEffect extends Enemy
             }
         }
 
-        if (this.timer == 110) this.killEnemy();
+        if (this.timer === 110) this.killEnemy();
 
         this.timer += 1;
 
@@ -1060,7 +1060,7 @@ class TankEnemy extends Enemy
 
     canDamagePlayer(player)
     {
-        return !(player.state == playerStates.dash);
+        return !(player.state === playerStates.dash);
     }
 
     healShield()
@@ -1074,7 +1074,7 @@ class TankEnemy extends Enemy
     {
         let leader = this.getLeaderTank();
 
-        if (leader != null)
+        if (leader !== null)
         {
             this.deltaX = leader.deltaX;
             this.deltaY = leader.deltaY;
@@ -1104,7 +1104,7 @@ class TankEnemy extends Enemy
 
     getLeaderTank()
     {
-        if (this.health == 0) return null;
+        if (this.health === 0) return null;
 
         this.gameObject.x += this.shieldWidth * 0.5 - 20;
         this.gameObject.y += this.shieldWidth * 0.5 - 20;
@@ -1113,12 +1113,12 @@ class TankEnemy extends Enemy
 
         for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
         {
-            if (this.gameState.gameData.enemies[i].id == this.id) break;
+            if (this.gameState.gameData.enemies[i].id === this.id) break;
 
             if (
                 this.gameObject.collidesWith(
                     this.gameState.gameData.enemies[i].gameObject
-                ) && (this.gameState.gameData.enemies[i].type == enemyTypes.tank)
+                ) && (this.gameState.gameData.enemies[i].type === enemyTypes.tank)
             )
             {
                 this.gameObject.x -= this.shieldWidth * 0.5 - 20;

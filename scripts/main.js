@@ -11,6 +11,8 @@ const menu = {
     data: {
         difficultyRatings: [0.5, 1, 2],
         option: 0,
+        suboption: 0,
+        suboptionNum: 1,
         controls: {
             accelerate: "ArrowUp",
             decelerate: "ArrowDown",
@@ -45,7 +47,9 @@ const menu = {
         enter: function()
         {
             endKeyDownListen();
-            menu.data.option = 1;
+            menu.data.option = 0;
+            menu.data.suboption = 1;
+            menu.data.suboptionNum = 3;
             menu.startGameMenu.loop({key: ""});
         },
 
@@ -66,29 +70,62 @@ const menu = {
             ctx.font = "25px Monospace";
             ctx.fillStyle = "#000";
 
-            ctx.fillText("  ] Start game (easy)", 20, 110);
-            ctx.fillText("  ] Start game (normal)", 20, 140);
-            ctx.fillText("  ] Start game (hard)", 20, 170);
-            ctx.fillText("  ] View/edit controls", 20, 200);
+            ctx.fillText("  ] Start:  easy  normal  hard", 20, 110);
+            ctx.fillText("  ] View/edit controls", 20, 140);
+
+            let prevOption = menu.data.option;
 
             if (e.key === "ArrowDown") menu.data.option++;
             else if (e.key === "ArrowUp") menu.data.option--;
 
-            if (menu.data.option < 0) menu.data.option = 0;
-            if (menu.data.option > 2) menu.data.option = 3;
+            if (menu.data.option === -1) menu.data.option += 1;
+            if (menu.data.option === 2) menu.data.option -= 1;
 
-            for (let i = 0; i < 4; i++)
+            if (menu.data.option === 0)
+            {
+                if (prevOption !== 0)
+                {
+                    menu.data.suboptionNum = 3;
+                    menu.data.suboption = 1;
+                }
+            } else menu.data.suboptionNum = 1;
+
+            if (e.key === "ArrowRight") menu.data.suboption++;
+            else if (e.key === "ArrowLeft") menu.data.suboption--;
+
+            if (menu.data.suboption === -1) menu.data.suboption += 1;
+            if (menu.data.suboption === menu.data.suboptionNum) menu.data.suboption -= 1;
+
+            for (let i = 0; i < 2; i++)
             {
                 ctx.fillText((i === menu.data.option) ? "[x" : "[ ", 20, 110 + 30 * i);
             }
 
+            if (menu.data.option === 0)
+            {
+                switch (menu.data.suboption)
+                {
+                    case 0:
+                        ctx.fillText("           <    >", 20, 110);
+                        break;
+
+                    case 1:
+                        ctx.fillText("                 <      >", 20, 110);
+                        break;
+
+                    case 2:
+                        ctx.fillText("         :               <    >", 20, 110);
+                        break;
+                }
+            }
+
             if (e.key === "Enter")
             {
-                if (menu.data.option >= 0 && menu.data.option <= 2)
+                if (menu.data.option === 0)
                 {
                     menu.removeMenu();
                     startKeyDownListen();
-                    gameState.begin(menu.data.difficultyRatings[menu.data.option]);
+                    gameState.begin(menu.data.difficultyRatings[menu.data.suboption]);
                 } else menu.switchMenu(menu.controlsMenu);
             }
         }
@@ -174,6 +211,7 @@ const menu = {
 
             ctx.fillText((menu.data.option === 0) ? "[x" : "[ ", 20, 110);
             if (menu.data.option > 0) ctx.fillText("(edit)", 20, 140 + 30 * menu.data.option);
+            else ctx.fillText(" V", 20, 140);
 
             ctx.fillText("  ] Back to main menu", 20, 110);
             ctx.fillText("       accelerate: [" +

@@ -1016,6 +1016,12 @@ class TankEnemy extends Enemy
         this.deltaY = 0;
         this.shield = 50;
         this.shieldTimer = 0;
+        
+        this.shieldWidth = this.shield * 0.4;
+        this.gameObject.x -= this.shieldWidth * 0.5;
+        this.gameObject.y -= this.shieldWidth * 0.5;
+        this.gameObject.width += this.shieldWidth;
+        this.gameObject.height += this.shieldWidth;
 
         this.isFollowing = false;
     }
@@ -1050,6 +1056,11 @@ class TankEnemy extends Enemy
         }
 
         return amount;
+    }
+
+    canDamagePlayer(player)
+    {
+        return !(player.state == playerStates.dash);
     }
 
     healShield()
@@ -1094,22 +1105,53 @@ class TankEnemy extends Enemy
     getLeaderTank()
     {
         if (this.health == 0) return null;
+
+        this.gameObject.x += this.shieldWidth * 0.5 - 20;
+        this.gameObject.y += this.shieldWidth * 0.5 - 20;
+        this.gameObject.width -= this.shieldWidth - 40;
+        this.gameObject.height -= this.shieldWidth - 40;
+
         for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
         {
-            if (this.gameState.gameData.enemies[i].id == this.id) return null;
+            if (this.gameState.gameData.enemies[i].id == this.id) break;
 
             if (
                 this.gameObject.collidesWith(
                     this.gameState.gameData.enemies[i].gameObject
                 ) && (this.gameState.gameData.enemies[i].type == enemyTypes.tank)
-            ) return this.gameState.gameData.enemies[i];
+            )
+            {
+                this.gameObject.x -= this.shieldWidth * 0.5 - 20;
+                this.gameObject.y -= this.shieldWidth * 0.5 - 20;
+                this.gameObject.width += this.shieldWidth - 40;
+                this.gameObject.height += this.shieldWidth - 40;
+
+                return this.gameState.gameData.enemies[i];
+            }
         }
+
+        this.gameObject.x -= this.shieldWidth * 0.5 - 20;
+        this.gameObject.y -= this.shieldWidth * 0.5 - 20;
+        this.gameObject.width += this.shieldWidth - 40;
+        this.gameObject.height += this.shieldWidth - 40;
 
         return null;
     }
 
     update(ctx)
     {
+        this.gameObject.x += this.shieldWidth * 0.5;
+        this.gameObject.y += this.shieldWidth * 0.5;
+        this.gameObject.width -= this.shieldWidth;
+        this.gameObject.height -= this.shieldWidth;
+
+        this.shieldWidth = this.shield * 0.4;
+        
+        this.gameObject.x -= this.shieldWidth * 0.5;
+        this.gameObject.y -= this.shieldWidth * 0.5;
+        this.gameObject.width += this.shieldWidth;
+        this.gameObject.height += this.shieldWidth;
+
         this.move();
 
         if(!this.isFollowing) this.boundEnemyOnceEntered();
@@ -1122,29 +1164,31 @@ class TankEnemy extends Enemy
         } else this.healShield();
         
         this.collideWithBullets();
+
         this.gameObject.update(ctx, this);
     }
     
     draw(ctx, data)
     {
-        ctx.fillStyle = "Black";
-        ctx.fillRect(
-            data.gameObject.x,
-            data.gameObject.y,
-            data.gameObject.width,
-            data.gameObject.height
-        );
         
         if (data.shield > 0)
         {
             ctx.strokeStyle = "Gray";
-            ctx.lineWidth = data.shield * 0.2;
+            ctx.lineWidth = data.shield * 0.4;
             ctx.strokeRect(
-                data.gameObject.x,
-                data.gameObject.y,
-                data.gameObject.width,
-                data.gameObject.height
+                data.gameObject.x + data.shieldWidth * 0.5,
+                data.gameObject.y + data.shieldWidth * 0.5,
+                data.gameObject.width - data.shieldWidth,
+                data.gameObject.height - data.shieldWidth
             );
         }
+
+        ctx.fillStyle = "Black";
+        ctx.fillRect(
+            data.gameObject.x + data.shieldWidth * 0.5,
+            data.gameObject.y + data.shieldWidth * 0.5,
+            data.gameObject.width - data.shieldWidth,
+            data.gameObject.height - data.shieldWidth
+        );
     }
 }

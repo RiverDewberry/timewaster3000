@@ -1,5 +1,4 @@
-"timewaster3000" is a very simplistic 'game' designed to be a short distraction for when I need small break.
-Hopefully someone else can find use from this as well.
+"timewaster3000" was a very simplistic 'game' designed to be a short distraction for when I need small break. Now, I realize that the real time waster is having a fun project that I can work on whenever I'm bored.
 
 The reason for some of the more "interesting" decisions made in the creation of this game
 (such as this thing being written in plain JS)

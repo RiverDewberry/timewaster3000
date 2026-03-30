@@ -79,6 +79,29 @@ const enemyScaling = [
             }
         },
         curentWeight: null
+    },
+
+    {
+        scaleStart: 450,
+        scaleEnd: 2000,
+        fullWeight: 2,
+        delayFactor: 5,
+        spawn: function(gs, x, y) {
+            let temp = enemyScaling.splice(5, enemyScaling.length - 5);
+
+            let delay = 0;
+
+            for (let i = 0; i < 10; i++)
+            {
+                delay += gameState.gameData.enemySpawner.enemySpawnTimerTarget;
+                gameState.gameData.enemySpawner.spawnEnemy();
+            }
+
+            delay *= 0.40;
+
+            gameState.gameData.enemySpawner.enemySpawnTimerTarget += delay;
+            enemyScaling.splice(5, 0, ...temp);
+        }
     }
 ];
 

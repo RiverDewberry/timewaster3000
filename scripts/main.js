@@ -310,7 +310,7 @@ const menu = {
             }
         }
     }
-}
+};
 
 const gameState = new GameState(ctx, 25,
     function() {menu.switchMenu(menu.deathMenu);},

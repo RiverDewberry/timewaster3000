@@ -506,7 +506,7 @@ class ArcherEnemy extends Enemy
 {
     constructor(gameState, x, y)
     {
-        super(gameState, x, y, 14, 14, 8, 1, enemyTypes.archer, 2)
+        super(gameState, x, y, 14, 14, 8, 1, enemyTypes.archer, 2);
      
         this.maxSpeed = 5;
         this.acceleration = 5;
@@ -752,7 +752,7 @@ class DashEnemy extends Enemy
 {
     constructor(gameState, x, y)
     {
-        super(gameState, x, y, 12, 12, 3, 1, enemyTypes.dash, 2)
+        super(gameState, x, y, 12, 12, 3, 1, enemyTypes.dash, 2);
      
         this.maxSpeed = 4;
         this.acceleration = 4;
@@ -911,7 +911,7 @@ class DashEnemy extends Enemy
     {
         if (data.dashTimer >= 10)
         {
-            ctx.strokeStyle = "Lightgrey"
+            ctx.strokeStyle = "Lightgrey";
             ctx.lineWidth = 4;
 
             ctx.strokeRect(
@@ -940,7 +940,7 @@ class DashEnemy extends Enemy
             );
 
         } else {
-            ctx.strokeStyle = "Grey"
+            ctx.strokeStyle = "Grey";
             ctx.lineWidth = 4;
 
             ctx.strokeRect(

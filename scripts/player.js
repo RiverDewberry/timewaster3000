@@ -251,7 +251,7 @@ class Player
     draw(ctx, data)
     {
         if (data.health <= 0) return;
-        ctx.strokeStyle = "Lightgrey"
+        ctx.strokeStyle = "Lightgrey";
         ctx.lineWidth = 0.2 * data.gameObject.width;
 
         ctx.strokeRect(
@@ -324,7 +324,7 @@ class Player
                 data.gameObject.height * (0.4 + 0.1 * (Math.max(0, data.shotDelayTimer)))
             );
 
-        ctx.fillStyle = "#00f"
+        ctx.fillStyle = "#00f";
         ctx.fillRect(
             data.gameObject.x + data.gameObject.width * (0.5 - (data.ammo / 75) + xDirection),
             data.gameObject.y + data.gameObject.width * (0.5 - (data.ammo / 75) + yDirection),

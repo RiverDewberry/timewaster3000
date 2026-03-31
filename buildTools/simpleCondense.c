@@ -40,7 +40,44 @@ void printFile(char *fname)
     fread(inputBuffer, 1, inputFileLength, inputFile);
     fclose(inputFile);
     inputBuffer[inputFileLength] = 0;
-    printf("%s", inputBuffer);
+    
+    char prevType = 0;
+    char prevTypePrinted = 0;
+
+    for (size_t i = 0; inputBuffer[i] != 0; i++)
+    {
+        if (isWhitespace(inputBuffer[i])) 
+        {
+            prevType = whitespace;
+            continue;
+        }
+
+        if (isAlphaNum(inputBuffer[i]))
+        {
+            if (prevTypePrinted == alphanum && prevType == whitespace) printf(" ");
+            prevType = alphanum;
+            prevTypePrinted = alphanum;
+        } else {
+            prevType = symbol;
+            prevTypePrinted = symbol;
+        }
+
+        printf("%c", inputBuffer[i]);
+
+        if (inputBuffer[i] == '\"')
+        {
+            do {
+                i++;
+                printf("%c", inputBuffer[i]);
+            } while (inputBuffer[i] != '\"' && inputBuffer[i - 1] != '\\');
+        } else if (inputBuffer[i] == '\'')
+        {
+            do {
+                i++;
+                printf("%c", inputBuffer[i]);
+            } while (inputBuffer[i] != '\'' && inputBuffer[i - 1] != '\\');
+        }
+    }
 }
 
 int main(int argc, char ** argv)

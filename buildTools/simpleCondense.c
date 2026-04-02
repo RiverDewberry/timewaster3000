@@ -54,7 +54,9 @@ void printFile(char *fname)
 
         if (isAlphaNum(inputBuffer[i]))
         {
-            if (prevTypePrinted == alphanum && prevType == whitespace) printf(" ");
+            if (prevTypePrinted == alphanum && prevType == whitespace)
+                printf(" ");
+
             prevType = alphanum;
             prevTypePrinted = alphanum;
         } else {
@@ -76,6 +78,54 @@ void printFile(char *fname)
                 i++;
                 printf("%c", inputBuffer[i]);
             } while (inputBuffer[i] != '\'' && inputBuffer[i - 1] != '\\');
+        }
+    }
+}
+
+void printFileBase64(char *fname)
+{
+    FILE* inputFile = fopen(fname, "r");
+    fseek(inputFile, 0, SEEK_END);
+    size_t inputFileLength = ftell(inputFile);
+    fseek(inputFile, 0, SEEK_SET);
+    char inputBuffer[inputFileLength];
+    fread(inputBuffer, 1, inputFileLength, inputFile);
+    fclose(inputFile);
+
+    //3e 87 b1
+    //0011 1110 1000 0111 1011 0001
+    //001111 101000 011110 110001
+
+    //3f 88 b1
+    //0011 1111 1000 1000 1011 0001
+    //001111 111000 100010 110001
+
+    for (size_t i = 0; i < inputFileLength; i += 3)
+    {
+        int chunk = 0, padding = 0;
+
+        for (size_t j = i; j < i + 3; j++)
+        {
+            if (j < inputFileLength) ((char*)&chunk)[2+i-j] = inputBuffer[j];
+            else ((char*)&chunk)[2+i-j] = 0, padding++;
+        }
+
+        for (int j = 0; j < 4; j++)
+        {
+            if (4 - j <= padding)
+            {
+                printf("=");
+                continue;
+            }
+
+            char temp = (chunk >> 18) & 0b111111;
+            chunk <<= 6;
+
+            if (temp < 26) printf("%c", 'A' + temp);
+            else if (temp < 52) printf("%c", 'a' + temp - 26);
+            else if (temp < 62) printf("%c", '0' + temp - 52);
+            else if (temp == 62) printf("+");
+            else if (temp == 63) printf("/");
         }
     }
 }
@@ -154,35 +204,61 @@ int main(int argc, char ** argv)
 
             if (j == 11)
             {
-                while (
-                        (outputBuffer[i] != '\'') &&
-                        (outputBuffer[i] != '\"') &&
-                        (outputBuffer[i] != '`')
-                ) i++;
+                while (outputBuffer[i] != '\"') i++;
                 outputBuffer[i] = 0;
 
                 i++;
                 int startIndex = i;
 
-                while (
-                        (outputBuffer[i] != '\'') &&
-                        (outputBuffer[i] != '\"') &&
-                        (outputBuffer[i] != '`')
-                ) i++;
+                while (outputBuffer[i] != '\"') i++;
                 outputBuffer[i] = 0;
 
                 printf("<script>");
                 printFile(outputBuffer + startIndex);
-                printf("</script>");
+                printf("</script");
 
                 do i++; while(outputBuffer[i] != '>');
                 do i++; while(outputBuffer[i] != '>');
             }
         }
 
+        for (int j = 0; j < 31; j++)
+        {
+            if (
+                    outputBuffer[i + j] !=
+                    "<link rel=\"icon\" type=\"image/x-icon\" href="[j]
+               )
+            {
+                printCurrent = 1;
+                break;
+            }
+
+            if (j == 11)
+            {
+                do i++; while(outputBuffer[i] != '\"');
+                do i++; while(outputBuffer[i] != '\"');
+                do i++; while(outputBuffer[i] != '\"');
+                do i++; while(outputBuffer[i] != '\"');
+                do i++; while(outputBuffer[i] != '\"');
+                outputBuffer[i] = 0;
+
+                i++;
+                int startIndex = i;
+
+                while (outputBuffer[i] != '\"') i++;
+                outputBuffer[i] = 0;
+
+                printf("<link rel=\"icon\" type=\"image/x-icon\" href=\"data:image/png;base64,");
+                printFileBase64(outputBuffer + startIndex);
+                printf("\">");
+
+                do i++; while(outputBuffer[i] != '>');
+                i++;
+            }
+        }
+
         if (printCurrent == 1) printf("%c", outputBuffer[i]);
     }
-
 
     return 0;
 }

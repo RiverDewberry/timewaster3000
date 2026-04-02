@@ -92,14 +92,6 @@ void printFileBase64(char *fname)
     fread(inputBuffer, 1, inputFileLength, inputFile);
     fclose(inputFile);
 
-    //3e 87 b1
-    //0011 1110 1000 0111 1011 0001
-    //001111 101000 011110 110001
-
-    //3f 88 b1
-    //0011 1111 1000 1000 1011 0001
-    //001111 111000 100010 110001
-
     for (size_t i = 0; i < inputFileLength; i += 3)
     {
         int chunk = 0, padding = 0;

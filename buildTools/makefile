@@ -6,5 +6,5 @@ all: build
 build:
 	rm -f index.html
 	gcc simpleCondense.c
-	./a.out ../index.html > ./index.html
+	./a.out ../source/index.html > ./index.html
 	rm -f a.out

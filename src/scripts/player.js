@@ -17,18 +17,24 @@ class Player
 
         this.deltaX = 0;
         this.deltaY = 0;
-        this.acceleration = 0;
         this.angle = 0;
         this.id = null;
+
+        this.acceleration = 0;
+        this.maxSpeed = 5;
 
         this.dashDirection = {x: 0, y: 0};
         this.dashTimer = 0;
         this.dashCount = 0;
+        this.maxDash = 3;
 
         this.ammo = 0;
+        this.shotDelaySpeed = 3;
         this.shotDelayTimer = 0;
+        this.maxAmmo = 15;
 
         this.health = 15;
+        this.maxhealth = 15;
 
         this.state = playerStates.move;
         this.slowed = false;
@@ -88,11 +94,11 @@ class Player
 
         if (this.health > 0)
         {
-            if (this.health < 15)
+            if (this.health < this.maxhealth)
             {
                 this.health += 0.002;
             }
-            else this.health = 15;
+            else this.health = this.maxhealth;
         }
 
         if (exitGamePressed())
@@ -114,24 +120,16 @@ class Player
         }
     }
 
-    move()
+    turn()
     {
-        if (dashPressed() && this.dashCount >= 1)
-        {
-            this.state = playerStates.dash;
-            this.dashCount -= 1;
-            this.dashTimer = 0;
-            new DashEffect(this.gameState, this);
-            this.dash();
-            return;
-        } else {
-            this.dashTimer += 0.002;
-            this.dashCount += this.dashTimer * 1 / (0.25 + Math.sqrt(
-                this.deltaX * this.deltaX + this.deltaY * this.deltaY
-            ));
-            if (this.dashCount > 3) this.dashCount = 3;
-        }
+        if (turnLeftPressed()) this.angle -= 10 /
+            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
+        if (turnRightPressed()) this.angle += 10 /
+            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
+    }
 
+    accelerate()
+    {
         this.deltaX *= 0.995;
         this.deltaY *= 0.995;
         if (this.acceleration > 1) this.acceleration = 1;
@@ -149,21 +147,39 @@ class Player
 
             if (this.acceleration < 0) this.acceleration = 0;
         }
+    }
 
-        if (turnLeftPressed()) this.angle -= 10 /
-            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
-        if (turnRightPressed()) this.angle += 10 /
-            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
+    move()
+    {
+        if (dashPressed() && this.dashCount >= 1)
+        {
+            this.state = playerStates.dash;
+            this.dashCount -= 1;
+            this.dashTimer = 0;
+            new DashEffect(this.gameState, this);
+            this.dash();
+            return;
+        } else {
+            this.dashTimer += 0.002;
+            this.dashCount += this.dashTimer * 1 / (0.25 + Math.sqrt(
+                this.deltaX * this.deltaX + this.deltaY * this.deltaY
+            ));
+            if (this.dashCount > this.maxDash) this.dashCount = this.maxDash;
+        }
+
+        this.accelerate();
+
+        this.turn();
         
         this.deltaX += Math.cos(this.angle) * this.acceleration;
         this.deltaY += Math.sin(this.angle) * this.acceleration;
 
         let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
 
-        if (velocityMag > 5)
+        if (velocityMag > this.maxSpeed)
         {
-            this.deltaX /= velocityMag * 0.2;
-            this.deltaY /= velocityMag * 0.2;
+            this.deltaX /= velocityMag / this.maxSpeed;
+            this.deltaY /= velocityMag / this.maxSpeed;
         }
 
         this.findDashDirection();
@@ -178,15 +194,15 @@ class Player
         {
             new Bullet(this.gameState, this);
             this.ammo -= 1;
-            this.shotDelayTimer = 3;
+            this.shotDelayTimer = this.shotDelaySpeed;
         } else {
             this.shotDelayTimer -= 1;
 
-            if (this.ammo < 15)
+            if (this.ammo < this.maxAmmo)
             {
                 this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.002);
             } else {
-                this.ammo = 15;
+                this.ammo = this.maxAmmo;
             }
         }
     }
@@ -275,16 +291,20 @@ class Player
             {
                 ctx.fillStyle = "Red";
 
+                let size = data.health / data.maxhealth;
+
                 ctx.fillRect(
-                    data.gameObject.x + data.gameObject.height * (0.5 - data.health / 30),
-                    data.gameObject.y + data.gameObject.width * (0.5 - data.health / 30),
-                    data.gameObject.width * (data.health / 15),
-                    data.gameObject.height * (data.health / 15)
+                    data.gameObject.x + data.gameObject.height * (1 - size) * 0.5,
+                    data.gameObject.y + data.gameObject.width * (1 - size) * 0.5,
+                    data.gameObject.width * size,
+                    data.gameObject.height * size
                 );
             }
 
         } else {
-            ctx.strokeStyle = "rgb(" + Math.round(data.health * 10 + 105) + ", 105, 105)";
+            
+            let scaledHealth = data.health * 150 / data.maxhealth;
+            ctx.strokeStyle = "rgb(" + Math.round(scaledHealth + 105) + ", 105, 105)";
             ctx.lineWidth = 8;
             ctx.strokeRect(
                 data.gameObject.x,
@@ -294,10 +314,14 @@ class Player
             );
         }
 
-        ctx.fillStyle = "rgb(211, 211, 211)";
-        if (data.dashCount >= 1) ctx.fillStyle = "rgb(147, 213, 147)";
-        if (data.dashCount >= 2) ctx.fillStyle = "rgb(80, 229, 80)";
-        if (data.dashCount === 3) ctx.fillStyle = "rgb(0, 255, 0)";
+        if (data.maxDash != 0)
+        {
+            let scaledDash = data.dashCount / data.maxDash;
+            ctx.fillStyle = "rgb(" +
+            ((1 - scaledDash) * 211) + "," +
+            (211 + 44 * scaledDash) + "," +
+            ((1 - scaledDash) * 211) + ")";
+        } else ctx.fillStyle = "rgb(211, 211, 211)";
 
         ctx.fillRect(
             data.gameObject.x + data.gameObject.width * 
@@ -314,24 +338,32 @@ class Player
         xDirection /= directionScale;
         yDirection /= directionScale;
 
-        if (this.ammo !== 15)
-            ctx.fillRect(
-                data.gameObject.x + data.gameObject.width * 
-                    (0.3 + xDirection - 0.05 * (Math.max(0, data.shotDelayTimer))),
-                data.gameObject.y + data.gameObject.width *
-                    (0.3 + yDirection - 0.05 * (Math.max(0, data.shotDelayTimer))),
-                data.gameObject.width * (0.4 + 0.1 * (Math.max(0, data.shotDelayTimer))),
-                data.gameObject.height * (0.4 + 0.1 * (Math.max(0, data.shotDelayTimer)))
-            );
+        if (data.maxAmmo != 0)
+        {
+            if (data.ammo !== data.maxAmmo)
+            {
+                let dotScale = 3 * Math.max(0, data.shotDelayTimer) / data.shotDelaySpeed;
+                ctx.fillRect(
+                    data.gameObject.x + data.gameObject.width * 
+                        (0.3 + xDirection - 0.05 * dotScale),
+                    data.gameObject.y + data.gameObject.width *
+                        (0.3 + yDirection - 0.05 * dotScale),
+                    data.gameObject.width * (0.4 + 0.1 * dotScale),
+                    data.gameObject.height * (0.4 + 0.1 * dotScale)
+                );
+            }
 
-        ctx.fillStyle = "#00f";
-        ctx.fillRect(
-            data.gameObject.x + data.gameObject.width * (0.5 - (data.ammo / 75) + xDirection),
-            data.gameObject.y + data.gameObject.width * (0.5 - (data.ammo / 75) + yDirection),
-            data.gameObject.width * 0.4 * (data.ammo / 15),
-            data.gameObject.height * 0.4 * (data.ammo / 15)
-        );
-        
+            ctx.fillStyle = "#00f";
+            let scaledAmmo = data.ammo / data.maxAmmo;
+            ctx.fillRect(
+                data.gameObject.x + data.gameObject.width *
+                (0.5 - (scaledAmmo * 0.2) + xDirection),
+                data.gameObject.y + data.gameObject.width *
+                (0.5 - (scaledAmmo * 0.2) + yDirection),
+                data.gameObject.width * 0.4 * scaledAmmo,
+                data.gameObject.height * 0.4 * scaledAmmo
+            );
+        }
     }
 }
 

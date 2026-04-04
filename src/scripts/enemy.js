@@ -130,7 +130,7 @@ class EnemySpawner
     update(ctx)
     {
         this.gameTime += this.difficulty;
-        this.enemySpawnTimer += 1;
+        this.enemySpawnTimer += 1 + (this.difficulty - 1) * 0.333;
         if (this.enemySpawnTimer > this.enemySpawnTimerTarget)
         {
             this.spawnEnemy();

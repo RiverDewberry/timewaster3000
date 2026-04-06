@@ -125,7 +125,7 @@ const menu = {
                 {
                     menu.removeMenu();
                     startKeyDownListen();
-                    gameState.begin(menu.data.difficultyRatings[menu.data.suboption]);
+                    gameState.begin(menu.data.difficultyRatings[menu.data.suboption], 0);
                 } else menu.switchMenu(menu.controlsMenu);
             }
         }

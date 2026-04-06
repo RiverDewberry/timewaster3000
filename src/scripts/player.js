@@ -8,6 +8,20 @@ function shootPressed() {return keysDown.includes(menu.data.controls.shoot);}
 function dashPressed() {return keysDown.includes(menu.data.controls.dash);}
 function exitGamePressed() {return keysDown.includes(menu.data.controls.exitGame);}
 
+const playerTypes = [
+    {
+        name: "Normal",
+        spawn: (g)=>{(new Player(g))},
+        description: "normal player"
+    },
+
+    {
+        name: "Tank",
+        spawn: (g)=>{new PlayerTank(g)},
+        description: "slow but hard to kill"
+    }
+];
+
 class Player
 {
     constructor(gameState)
@@ -35,6 +49,7 @@ class Player
 
         this.health = 15;
         this.maxhealth = 15;
+        this.regenRate = 1;
 
         this.state = playerStates.move;
         this.slowed = false;
@@ -96,7 +111,7 @@ class Player
         {
             if (this.health < this.maxhealth)
             {
-                this.health += 0.002;
+                this.health += 0.002 * this.regenRate;
             }
             else this.health = this.maxhealth;
         }
@@ -567,4 +582,19 @@ class Bullet
             }
         }
     }    
+}
+
+class PlayerTank extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+
+        this.health = 20;
+        this.maxhealth = 20;
+        this.maxDash = 1;
+        this.maxAmmo = 20;
+        this.maxSpeed = 3;
+        this.regenRate = 1.5;
+    }
 }

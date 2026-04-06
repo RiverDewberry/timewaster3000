@@ -8,7 +8,7 @@ were made such that this can run locally on a school managed Chromebook >:3
 (note: all you have to do is open the html file, this section is for people who have limited knowledge about computers)
 
 1. click "index.html"
-2. click the button to "Wownload raw file"
+2. click the button to "Download raw file"
 3. press the shortcut "ctrl+o"
 4. find the file that you downloaded and double click on it
 5. bookmark the tab that the game is running on so that you can easily access this later

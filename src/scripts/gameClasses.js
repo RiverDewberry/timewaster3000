@@ -83,8 +83,8 @@ class GameState
     {
         this.running = true;
         this.initSession();
-        playerTypes[type].spawn(this);
         new EnemySpawner(this, difficulty);
+        playerTypes[type].spawn(this);
         this.intervalTracker = setInterval(this.tick, this.tickSpeed, this);
     }
 

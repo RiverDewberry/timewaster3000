@@ -11,15 +11,32 @@ function exitGamePressed() {return keysDown.includes(menu.data.controls.exitGame
 const playerTypes = [
     {
         name: "Normal",
-        spawn: (g)=>{(new Player(g))},
-        description: "normal player"
+        spawn: (g)=>{new Player(g);},
+        description: "A normal player."
     },
 
     {
         name: "Tank",
-        spawn: (g)=>{new PlayerTank(g)},
-        description: "slow but hard to kill"
-    }
+        spawn: (g)=>{new PlayerTank(g);},
+        description: "Slow and hard to kill.\n(Mostly just slow)"
+    },
+
+    {
+        name: "Hardcore",
+        spawn: (g)=>{
+            g.gameData.enemySpawner.gameTime = 750 * 40;
+            new Player(g);
+            g.gameData.player.health *= 0.5;
+        },
+        description: "Spawn at score 750 with half of max health."
+    },
+
+    {
+        name: "Glass railgun",
+        spawn: (g)=>{new GlassRailgun(g);},
+        description: "Are you happy now, Sihoo?"
+    },
+
 ];
 
 class Player
@@ -504,6 +521,13 @@ class Bullet
             this.deltaY * this.deltaY
         );
 
+        if (this.deltaTotal < 1)
+        {
+            this.deltaTotal = 1;
+            this.deltaX /= this.deltaTotal;
+            this.deltaY /= this.deltaTotal;
+        }
+
         this.gameState = gameState;
         this.gameObject = new GameObject(
             player.gameObject.x + (0.5 + xDirection) * player.gameObject.width - this.deltaTotal,
@@ -596,5 +620,53 @@ class PlayerTank extends Player
         this.maxAmmo = 20;
         this.maxSpeed = 3;
         this.regenRate = 1.5;
+    }
+}
+
+class GlassRailgun extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+        this.health = 10;
+        this.maxhealth = 10;
+        this.maxAmmo = 5;
+        this.maxDash = 0;
+    }
+
+    turn()
+    {
+        if (turnLeftPressed()) this.angle -= 10 * Math.PI / 180;
+        if (turnRightPressed()) this.angle += 10 * Math.PI / 180;
+    }
+
+    move()
+    {
+        if (dashPressed() && this.dashCount >= 1)
+        {
+            this.dashCount -= 1;
+            this.dashTimer = 0;
+            new DashEffect(this.gameState, this);
+            this.deltaX += 15 * this.dashDirection.x;
+            this.deltaY += 15 * this.dashDirection.y;
+        } else {
+            this.dashTimer += 0.002;
+            this.dashCount += this.dashTimer * 1 / (0.25 + Math.sqrt(
+                this.deltaX * this.deltaX + this.deltaY * this.deltaY
+            ));
+            if (this.dashCount > this.maxDash) this.dashCount = this.maxDash;
+        }
+
+        this.accelerate();
+
+        this.turn();
+        
+        this.deltaX += Math.cos(this.angle) * this.acceleration;
+        this.deltaY += Math.sin(this.angle) * this.acceleration;
+
+        this.findDashDirection();
+
+        this.gameObject.x += this.deltaX * ((this.slowed) ? 0.2 : 1);
+        this.gameObject.y += this.deltaY * ((this.slowed) ? 0.2 : 1);
     }
 }

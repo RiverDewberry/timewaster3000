@@ -22,7 +22,8 @@ const menu = {
             dash: "x",
             pause: "p",
             exitGame: "Escape"
-        }
+        },
+        playerType: 0
     },
 
     switchMenu: function (newMenu)
@@ -72,6 +73,7 @@ const menu = {
 
             ctx.fillText("  ] Start:  easy  normal  hard", 20, 110);
             ctx.fillText("  ] View/edit controls", 20, 140);
+            ctx.fillText("  ] Select player type", 20, 170);
 
             let prevOption = menu.data.option;
 
@@ -79,7 +81,7 @@ const menu = {
             else if (e.key === "ArrowUp") menu.data.option--;
 
             if (menu.data.option === -1) menu.data.option += 1;
-            if (menu.data.option === 2) menu.data.option -= 1;
+            if (menu.data.option === 3) menu.data.option -= 1;
 
             if (menu.data.option === 0)
             {
@@ -96,7 +98,7 @@ const menu = {
             if (menu.data.suboption === -1) menu.data.suboption += 1;
             if (menu.data.suboption === menu.data.suboptionNum) menu.data.suboption -= 1;
 
-            for (let i = 0; i < 2; i++)
+            for (let i = 0; i < 3; i++)
             {
                 ctx.fillText((i === menu.data.option) ? "[x" : "[ ", 20, 110 + 30 * i);
             }
@@ -125,8 +127,15 @@ const menu = {
                 {
                     menu.removeMenu();
                     startKeyDownListen();
-                    gameState.begin(menu.data.difficultyRatings[menu.data.suboption], 0);
-                } else menu.switchMenu(menu.controlsMenu);
+                    gameState.begin(
+                        menu.data.difficultyRatings[menu.data.suboption],
+                        menu.data.playerType
+                    );
+                } else if (menu.data.option === 1) {
+                    menu.switchMenu(menu.controlsMenu);
+                } else {
+                    menu.switchMenu(menu.playerSelectionMenu);
+                }
             }
         }
     },
@@ -230,6 +239,95 @@ const menu = {
                 menu.data.controls.pause + "]", 20, 350);
             ctx.fillText("       exit game : [" +
                 menu.data.controls.exitGame + "]", 20, 380);
+        }
+    },
+
+    playerSelectionMenu: {
+        enter: function()
+        {
+            menu.data.option = 0;
+            menu.data.suboption = menu.data.playerType;
+            menu.playerSelectionMenu.loop({key: ""});
+        },
+
+        loop: function(e)
+        {
+            ctx.clearRect(0, 0, 500, 500);
+        
+            ctx.font = "40px Monospace";
+            ctx.fillStyle = "Black";
+
+            ctx.fillText("Time Waster 3000", 20, 50);
+            
+            ctx.font = "15px Monospace";
+            ctx.fillText("https://riverdewberry.dev", 20, 460);
+            ctx.fillText("No AI was used in the creation of this game.", 20, 480);
+            ctx.fillStyle = "#f00";
+            ctx.fillText("Use arrow keys and enter to navigate menu", 20, 75);
+            ctx.font = "25px Monospace";
+            ctx.fillStyle = "#000";
+
+            if (e.key === "ArrowDown") menu.data.option++;
+            else if (e.key === "ArrowUp") menu.data.option--;
+
+            if (menu.data.option < 0) menu.data.option = 0;
+            if (menu.data.option > 3) menu.data.option = 3;
+
+            ctx.fillText((menu.data.option === 0) ? "[x" : "[ ", 20, 110);
+            for(let i = 1; i < 4; i++)
+            {
+                ctx.fillText((menu.data.option === i) ? "[x" : "[ ", 20, 320 + 30 * i);
+            }
+
+            ctx.fillText("  ] Back to main menu", 20, 110);
+
+            if (e.key === "Enter")
+            {
+                if (menu.data.option === 0)
+                {
+                    startKeyDownListen();
+                    menu.switchMenu(menu.startGameMenu);
+                    return;
+                } else switch (menu.data.option)
+                {
+                    case 1:
+                        if (menu.data.suboption > 0) menu.data.suboption--;
+                        break;
+
+                    case 2:
+                        menu.data.playerType = menu.data.suboption;
+                        break;
+
+                    case 3:
+                        if ((menu.data.suboption + 1) < playerTypes.length)
+                            menu.data.suboption++;
+
+                    default: break;
+                }
+            }
+
+            ctx.fillText("Type: " + playerTypes[menu.data.suboption].name + " {" + (
+                    (menu.data.suboption === menu.data.playerType) ? "x" : " "
+                ) + "}", 20, 170);
+
+            ctx.fillText("  ] Go to previous type", 20, 350);
+            ctx.fillText("  ] Go to next type", 20, 410);
+
+            ctx.fillText("Description: ", 20, 230)
+
+            ctx.fillText(
+                "  ] Select" + ((menu.data.suboption === menu.data.playerType) ? "ed" : "")
+                + " type: (" + (menu.data.suboption + 1) + "/" + playerTypes.length + ")",
+                20, 380);
+            ctx.fillText("  ] Back to main menu", 20, 110);
+
+            ctx.font = "15px Monospace";
+
+            const tempText = playerTypes[menu.data.suboption].description.split("\n");
+            
+            for (let i = 0; i < tempText.length; i++) {
+                ctx.fillText(tempText[i], 20, 260 + 20 * i);
+            }
         }
     },
 

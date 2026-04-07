@@ -71,13 +71,13 @@ void printFile(char *fname)
             do {
                 i++;
                 printf("%c", inputBuffer[i]);
-            } while (inputBuffer[i] != '\"' && inputBuffer[i - 1] != '\\');
+            } while (inputBuffer[i] != '\"' || inputBuffer[i - 1] == '\\');
         } else if (inputBuffer[i] == '\'')
         {
             do {
                 i++;
                 printf("%c", inputBuffer[i]);
-            } while (inputBuffer[i] != '\'' && inputBuffer[i - 1] != '\\');
+            } while (inputBuffer[i] != '\'' || inputBuffer[i - 1] == '\\');
         }
     }
 }

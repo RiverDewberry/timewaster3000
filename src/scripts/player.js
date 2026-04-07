@@ -32,6 +32,12 @@ const playerTypes = [
     },
 
     {
+        name: "Strange",
+        spawn: (g)=>{new StrangePlayer(g);},
+        description: "A normal player with only minor changes :)"
+    },
+
+    {
         name: "Glass railgun",
         spawn: (g)=>{new GlassRailgun(g);},
         description: "Are you happy now, Sihoo?"
@@ -631,7 +637,7 @@ class GlassRailgun extends Player
         this.health = 10;
         this.maxhealth = 10;
         this.maxAmmo = 5;
-        this.maxDash = 0;
+        this.maxDash = 1;
     }
 
     turn()
@@ -640,21 +646,52 @@ class GlassRailgun extends Player
         if (turnRightPressed()) this.angle += 10 * Math.PI / 180;
     }
 
+    dash()
+    {
+        this.dashTimer += 1;
+        this.move();
+        if (this.dashTimer >= 20)
+        {
+            this.state = playerStates.move;
+            this.dashTimer = 0;
+        }
+    }
+
+    accelerate()
+    {
+        if (this.acceleration > 1) this.acceleration = 1;
+        
+        if (acceleratePressed()) this.acceleration += 0.15;
+        else this.acceleration = 0;
+
+        if (deceleratePressed())
+        {
+            this.acceleration *= 0.65;
+            this.acceleration -= 0.01;
+
+            this.deltaX *= 0.85;
+            this.deltaY *= 0.85;
+
+            if (this.acceleration < 0) this.acceleration = 0;
+        }
+    }
+
     move()
     {
-        if (dashPressed() && this.dashCount >= 1)
+        if (this.state !== playerStates.dash)
         {
-            this.dashCount -= 1;
-            this.dashTimer = 0;
-            new DashEffect(this.gameState, this);
-            this.deltaX += 15 * this.dashDirection.x;
-            this.deltaY += 15 * this.dashDirection.y;
-        } else {
-            this.dashTimer += 0.002;
-            this.dashCount += this.dashTimer * 1 / (0.25 + Math.sqrt(
-                this.deltaX * this.deltaX + this.deltaY * this.deltaY
-            ));
-            if (this.dashCount > this.maxDash) this.dashCount = this.maxDash;
+            if (dashPressed() && this.dashCount >= 1)
+            {
+                this.dashCount -= 1;
+                this.dashTimer = 0;
+                this.state = playerStates.dash;
+            } else {
+                this.dashTimer += 0.002;
+                this.dashCount += this.dashTimer * 1 / (0.25 + Math.sqrt(
+                    this.deltaX * this.deltaX + this.deltaY * this.deltaY
+                ));
+                if (this.dashCount > this.maxDash) this.dashCount = this.maxDash;
+            }
         }
 
         this.accelerate();
@@ -668,5 +705,96 @@ class GlassRailgun extends Player
 
         this.gameObject.x += this.deltaX * ((this.slowed) ? 0.2 : 1);
         this.gameObject.y += this.deltaY * ((this.slowed) ? 0.2 : 1);
+    }
+}
+
+class StrangePlayer extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+    }
+
+    accelerate()
+    {
+        this.deltaX *= 0.995;
+        this.deltaY *= 0.995;
+        if (this.acceleration > 1) this.acceleration = 1;
+        
+        if (
+            (acceleratePressed() ||
+            deceleratePressed() ||
+            turnLeftPressed() ||
+            turnRightPressed()) &&
+            (this.angle === this.targetAngle)
+        ) this.acceleration += 0.15;
+        else this.acceleration = 0;
+    }
+
+    turn()
+    {
+        this.targetAngle = 0;
+        this.pressCount = 0;
+        if (deceleratePressed()) this.targetAngle += Math.PI * 0.5, this.pressCount++;
+        if (acceleratePressed()) this.targetAngle += Math.PI * 1.5, this.pressCount++;
+        if (turnLeftPressed()) this.targetAngle += Math.PI, this.pressCount++;
+        if (turnRightPressed()) this.targetAngle += 0, this.pressCount++;
+
+        if (this.pressCount === 0) return;
+
+        if (acceleratePressed() && turnRightPressed() && this.pressCount === 2)
+            this.targetAngle = Math.PI * 1.75;
+        else this.targetAngle /= this.pressCount;
+
+        if (this.angle === this.targetAngle) return;
+
+        if (this.angle < 0) this.angle += 2 * Math.PI;
+
+        if (Math.abs(this.angle - this.targetAngle) < Math.PI)
+        {
+            if (this.targetAngle < this.angle) this.angle -= 0.333;
+            else this.angle += 0.333;
+        } else {
+            if (this.targetAngle < this.angle) this.angle += 0.333;
+            else this.angle -= 0.333;
+        }
+
+        if (this.angle < 0) this.angle += 2 * Math.PI; 
+        if (this.angle > (2 * Math.PI)) this.angle -= 2 * Math.PI;
+
+        if (Math.abs(this.angle - this.targetAngle) <= 0.334) this.angle = this.targetAngle;
+    }
+
+    dash()
+    {
+        this.gameObject.x += (15 - this.dashTimer) * this.dashDirection.x;
+        this.gameObject.y += (15 - this.dashTimer) * this.dashDirection.y;
+        this.deltaX = 5 * this.dashDirection.x;
+        this.deltaY = 5 * this.dashDirection.y;
+
+        this.turn();
+        this.turn();
+
+        this.dashTimer += 1;
+        if (this.dashTimer >= 10)
+        {
+            if (this.gameObject.x < 0) {this.gameObject.x = 0; this.deltaX = 0;}
+            if (this.gameObject.y < 0) {this.gameObject.y = 0; this.deltaY = 0;}
+            if (this.gameObject.x > 480) {this.gameObject.x = 480; this.deltaX = 0;}
+            if (this.gameObject.y > 480) {this.gameObject.y = 480; this.deltaY = 0;}
+            this.state = playerStates.move;
+            this.dashTimer = 0;
+            this.deltaX = 5 * this.dashDirection.x;
+            this.deltaY = 5 * this.dashDirection.y;
+            this.findDashDirection();
+
+            if (dashPressed() && this.dashCount >= 1)
+            {
+                this.state = playerStates.dash;
+                this.dashCount -= 1;
+                this.dashTimer = 0;
+                new DashEffect(this.gameState, this);
+            }
+        }
     }
 }

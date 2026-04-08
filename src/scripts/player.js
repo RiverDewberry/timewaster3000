@@ -771,7 +771,7 @@ class Railgun extends Player
             this.displayFunction(ctx, data);
             data.dashCount = 0;
             data.maxDash = 0;
-        }
+        };
 
         this.maxDash = 0;
         this.maxAmmo = 3;

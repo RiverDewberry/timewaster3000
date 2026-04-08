@@ -392,6 +392,10 @@ class Player
             ((1 - scaledDash) * 211) + ")";
         } else ctx.fillStyle = "rgb(211, 211, 211)";
 
+        let tempX = data.dashDirection.x;
+        let tempY = data.dashDirection.y;
+        data.findDashDirection();
+
         ctx.fillRect(
             data.gameObject.x + data.gameObject.width * 
                 (0.4 + data.dashDirection.x - Math.abs(data.dashDirection.y)),
@@ -400,6 +404,9 @@ class Player
             data.gameObject.width * (0.2 + 2 * Math.abs(data.dashDirection.y)),
             data.gameObject.height * (0.2 + 2 * Math.abs(data.dashDirection.x))
         );
+
+        data.dashDirection.x = tempX;
+        data.dashDirection.y = tempY;
 
         let xDirection = Math.cos(data.angle);
         let yDirection = Math.sin(data.angle);
@@ -615,10 +622,10 @@ class Bullet
         ctx.strokeStyle = "Lightgrey";
         ctx.lineWidth = 4;
         ctx.strokeRect(
-            data.gameObject.x,
-            data.gameObject.y,
-            data.gameObject.width,
-            data.gameObject.height
+            data.gameObject.x + 2,
+            data.gameObject.y + 2,
+            data.gameObject.width - 4,
+            data.gameObject.height - 4
         );
 
         ctx.fillStyle = "Gray";

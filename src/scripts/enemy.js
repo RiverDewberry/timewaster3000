@@ -349,6 +349,7 @@ class Enemy
         {
             this.killEnemy();
             this.health = 0;
+            this.gameState.gameData.killedEnemies += 1;
             return oldHealth;
         }
         return amount;
@@ -1068,6 +1069,7 @@ class TankEnemy extends Enemy
             if (this.health <= 0)
             {
                 this.killEnemy();
+                this.gameState.gameData.killedEnemies += 1;
                 return oldHealth;
             }
 

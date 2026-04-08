@@ -22,6 +22,12 @@ const playerTypes = [
     },
 
     {
+        name: "Glass Cannon",
+        spawn: (g)=>{new GlassCannon(g);},
+        description: "So much damage, so little health."
+    },
+
+    {
         name: "Hardcore",
         spawn: (g)=>{
             g.gameData.enemySpawner.gameTime = 750 * 40;
@@ -32,17 +38,42 @@ const playerTypes = [
     },
 
     {
-        name: "Strange",
-        spawn: (g)=>{new StrangePlayer(g);},
-        description: "A normal player with only minor changes :)"
+        name: "Vampire",
+        spawn: (g)=>{new PlayerVampire(g);},
+        description: "Blood is Fuel. Don't run out."
     },
 
     {
-        name: "Glass railgun",
-        spawn: (g)=>{new GlassRailgun(g);},
-        description: "Are you happy now, Sihoo?"
+        name: "Railgun",
+        spawn: (g)=>{new Railgun(g);},
+        description: "Shoot when you dash, dash when you shoot.\nNormal speed greatly reduced."
     },
 
+    {
+        name: "Grid turret",
+        spawn: (g)=>{new GridTurret(g);},
+        description: "Move only by dashing, and only shoot when still.\n" +
+        "Triple the ammo, and lower turning speed.\n" +
+        "You can't shoot past enemy dash lines."
+    },
+
+    {
+        name: "Strange",
+        spawn: (g)=>{new StrangePlayer(g);},
+        description: "Something about this one is just a bit off..."
+    },
+
+    {
+        name: "Superwarm",
+        spawn: (g)=>{new Superwarm(g);},
+        description: "Legally distinct name."
+    },
+
+    {
+        name: "Maximum Speed",
+        spawn: (g)=>{new MaximumSpeed(g);},
+        description: "Are you happy now, Sihoo?"
+    },
 ];
 
 class Player
@@ -60,7 +91,7 @@ class Player
         this.acceleration = 0;
         this.maxSpeed = 5;
 
-        this.dashDirection = {x: 0, y: 0};
+        this.dashDirection = {x: 1, y: 0};
         this.dashTimer = 0;
         this.dashCount = 0;
         this.maxDash = 3;
@@ -71,7 +102,7 @@ class Player
         this.maxAmmo = 15;
 
         this.health = 15;
-        this.maxhealth = 15;
+        this.maxHealth = 15;
         this.regenRate = 1;
 
         this.state = playerStates.move;
@@ -132,11 +163,11 @@ class Player
 
         if (this.health > 0)
         {
-            if (this.health < this.maxhealth)
+            if (this.health < this.maxHealth)
             {
                 this.health += 0.002 * this.regenRate;
             }
-            else this.health = this.maxhealth;
+            else this.health = this.maxHealth;
         }
 
         if (exitGamePressed())
@@ -228,7 +259,7 @@ class Player
 
     shoot()
     {
-        if (shootPressed() && (this.shotDelayTimer <= 0) && (this.ammo > 0))
+        if (shootPressed() && (this.shotDelayTimer <= 0) && (this.ammo >= 1))
         {
             new Bullet(this.gameState, this);
             this.ammo -= 1;
@@ -329,7 +360,7 @@ class Player
             {
                 ctx.fillStyle = "Red";
 
-                let size = data.health / data.maxhealth;
+                let size = data.health / data.maxHealth;
 
                 ctx.fillRect(
                     data.gameObject.x + data.gameObject.height * (1 - size) * 0.5,
@@ -341,7 +372,7 @@ class Player
 
         } else {
             
-            let scaledHealth = data.health * 150 / data.maxhealth;
+            let scaledHealth = data.health * 150 / data.maxHealth;
             ctx.strokeStyle = "rgb(" + Math.round(scaledHealth + 105) + ", 105, 105)";
             ctx.lineWidth = 8;
             ctx.strokeRect(
@@ -620,22 +651,250 @@ class PlayerTank extends Player
     {
         super(gameState);
 
-        this.health = 20;
-        this.maxhealth = 20;
+        this.health = 25;
+        this.maxHealth = 25;
         this.maxDash = 1;
-        this.maxAmmo = 20;
         this.maxSpeed = 3;
-        this.regenRate = 1.5;
+        this.maxAmmo = 20;
+        this.shotDelaySpeed = 5;
+        this.regenRate = 4;
     }
 }
 
-class GlassRailgun extends Player
+class TurretBullet extends Bullet
+{
+    constructor(gameState, player)
+    {
+        super(gameState, player);
+    }
+
+    update(ctx)
+    {
+        for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
+        {
+            let enemy = this.gameState.gameData.enemies[i];
+            if (
+                enemy.gameObject.collidesWith(this.gameObject) &&
+                enemy.type === enemyTypes.dashLine
+            )
+            {
+                this.killBullet();
+                return;
+            }
+        }
+        super.update(ctx);
+    }
+}
+
+class GridTurret extends Player
 {
     constructor(gameState)
     {
         super(gameState);
-        this.health = 10;
-        this.maxhealth = 10;
+        this.maxDash = 5;
+        this.maxAmmo = 45;
+        this.shotDelaySpeed = 3;
+    }
+
+    shoot()
+    {
+        if (
+            shootPressed() &&
+            (this.shotDelayTimer <= 0) &&
+            (this.ammo >= 1) &&
+            (this.deltaX === 0 && this.deltaY === 0)
+        )
+        {
+            new TurretBullet(this.gameState, this);
+            this.ammo -= 1;
+            this.shotDelayTimer = this.shotDelaySpeed;
+        } else {
+            this.shotDelayTimer -= 1;
+
+            if (this.ammo < this.maxAmmo)
+            {
+                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.002);
+            } else {
+                this.ammo = this.maxAmmo;
+            }
+        }
+    }
+
+    turn()
+    {
+        if (turnLeftPressed()) this.angle -= 7 /
+            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
+        if (turnRightPressed()) this.angle += 7 /
+            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
+    }
+
+    accelerate()
+    {
+        this.deltaX = 0;
+        this.deltaY = 0;
+    }
+}
+
+class GlassCannon extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+
+        this.health = 6;
+        this.maxHealth = 6;
+        this.maxDash = 4;
+        this.maxAmmo = 10;
+        this.shotDelaySpeed = 2;
+        this.maxSpeed = 7;
+        this.regenRate = 0.5;
+    }
+}
+
+class Railgun extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+
+        this.gameObject.update = function(ctx, data)
+        {
+            data.dashCount = data.ammo;
+            data.maxDash = data.maxAmmo;
+            this.displayFunction(ctx, data);
+            data.dashCount = 0;
+            data.maxDash = 0;
+        }
+
+        this.maxDash = 0;
+        this.maxAmmo = 3;
+        this.maxSpeed = 2;
+        this.maxHealth = 10;
+    }
+
+    shoot()
+    {
+        if (
+            (shootPressed() || dashPressed()) &&
+            (this.shotDelayTimer <= 0) &&
+            (this.ammo >= 1) &&
+            (this.state !== playerStates.dash)
+        )
+        {
+            this.ammo -= 1;
+            this.shotDelayTimer = this.shotDelaySpeed;
+            this.dashTimer = 0;
+            this.state = playerStates.dash;
+            new DashEffect(this.gameState, this);
+            this.dash();
+            new Bullet(this.gameState, this);
+        } else {
+            this.shotDelayTimer -= 1;
+
+            if (this.ammo < this.maxAmmo)
+            {
+                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.002);
+            } else {
+                this.ammo = this.maxAmmo;
+            }
+        }
+    }
+}
+
+class Superwarm extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+            this.health = 3;
+            this.maxHealth = 3;
+            this.shotDelaySpeed = 15;
+
+            gameState.addGameObject(
+            {
+                gameState: gameState,
+                counter: 0,
+                update: function(ctx)
+                {
+
+                    if (
+                        acceleratePressed() ||
+                        deceleratePressed() ||
+                        turnLeftPressed() ||
+                        turnRightPressed() ||
+                        shootPressed() ||
+                        dashPressed() ||
+                        pausePressed() ||
+                        exitGamePressed()
+                    ) {
+                        this.counter--;
+                        if (this.counter < 0) this.counter = 0;
+
+                        ctx.fillStyle = "rgba(0,0,0," + (this.counter * 0.002) + ")";
+                        ctx.fillRect(0, 0, 500, 500);
+
+                        return;
+                    }
+
+                    this.counter += 1;
+                    if (this.counter > 25) this.counter = 25;
+                    ctx.fillStyle = "rgba(0,0,0," + (this.counter * 0.002) + ")";
+                    ctx.fillRect(0, 0, 500, 500);
+
+                    this.gameState.skipTick = true;
+                    for (let i = 1; i < this.gameState.gameObjects.length; i++)
+                    {
+                        gameState.gameObjects[i].draw(
+                            ctx, gameState.gameObjects[i]
+                        );
+                    }
+                }
+            },
+            6
+        );
+    }
+}
+
+class PlayerVampire extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+        this.health = 5;
+        this.maxHealth = 5;
+
+        gameState.addGameObject(
+            {
+                gameState: gameState,
+                lastKilledEnemies: 0,
+                update: function(ctx)
+                {
+                    this.gameState.gameData.player.takeDamage(0.01);
+                    let temp = this.gameState.gameData.killedEnemies - this.lastKilledEnemies;
+                    this.gameState.gameData.player.health += temp;
+                    if (
+                        this.gameState.gameData.player.health >
+                        this.gameState.gameData.player.maxHealth
+                    )
+                    {
+                        this.gameState.gameData.player.health =
+                        this.gameState.gameData.player.maxHealth;
+                    }
+                    this.lastKilledEnemies = this.gameState.gameData.killedEnemies;
+                }
+            },
+            6
+        );
+    }
+}
+
+class MaximumSpeed extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+        this.health = 7;
+        this.maxHealth = 7;
         this.maxAmmo = 5;
         this.maxDash = 1;
     }

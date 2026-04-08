@@ -313,7 +313,7 @@ const menu = {
             ctx.fillText("  ] Go to previous type", 20, 350);
             ctx.fillText("  ] Go to next type", 20, 410);
 
-            ctx.fillText("Description: ", 20, 230);
+            ctx.fillText("Description: ", 20, 230)
 
             ctx.fillText(
                 "  ] Select" + ((menu.data.suboption === menu.data.playerType) ? "ed" : "")

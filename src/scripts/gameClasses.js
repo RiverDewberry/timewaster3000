@@ -52,7 +52,8 @@ class GameState
             enemySpawner: null,
             dashlines: [],
             bullets: [],
-            enemies: []
+            enemies: [],
+            killedEnemies: 0
         };
         this.idCounter = 0;
     }
@@ -65,9 +66,14 @@ class GameState
             gameState.internalObjectAddFunction(tempObject.obj, tempObject.order);
         }
         gameState.ctx.clearRect(0, 0, 500, 500);
+        
+        gameState.skipTick = false;
+        
         for (let i = 0; i < gameState.gameObjects.length; i++)
         {
             if (gameState.running) gameState.gameObjects[i].update(gameState.ctx);
+            if (gameState.skipTick === true) break;
+
         }
         for (let i = 0; i < gameState.gameObjects.length; i++)
         {

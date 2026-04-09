@@ -663,8 +663,8 @@ class PlayerTank extends Player
         this.maxDash = 1;
         this.maxSpeed = 3;
         this.maxAmmo = 20;
-        this.shotDelaySpeed = 5;
-        this.regenRate = 4;
+        this.shotDelaySpeed = 4;
+        this.regenRate = 2;
     }
 }
 
@@ -700,7 +700,7 @@ class GridTurret extends Player
         super(gameState);
         this.maxDash = 5;
         this.maxAmmo = 45;
-        this.shotDelaySpeed = 3;
+        this.shotDelaySpeed = 2;
     }
 
     shoot()
@@ -720,7 +720,7 @@ class GridTurret extends Player
 
             if (this.ammo < this.maxAmmo)
             {
-                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.002);
+                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.003);
             } else {
                 this.ammo = this.maxAmmo;
             }
@@ -729,10 +729,8 @@ class GridTurret extends Player
 
     turn()
     {
-        if (turnLeftPressed()) this.angle -= 7 /
-            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
-        if (turnRightPressed()) this.angle += 7 /
-            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
+        if (turnLeftPressed()) this.angle -= 5 * Math.PI / 180;
+        if (turnRightPressed()) this.angle += 5 * Math.PI / 180;
     }
 
     accelerate()
@@ -774,7 +772,7 @@ class Railgun extends Player
         };
 
         this.maxDash = 0;
-        this.maxAmmo = 3;
+        this.maxAmmo = 4;
         this.maxSpeed = 2;
         this.maxHealth = 10;
     }
@@ -876,9 +874,9 @@ class PlayerVampire extends Player
                 lastKilledEnemies: 0,
                 update: function(ctx)
                 {
-                    this.gameState.gameData.player.takeDamage(0.01);
+                    this.gameState.gameData.player.takeDamage(0.005);
                     let temp = this.gameState.gameData.killedEnemies - this.lastKilledEnemies;
-                    this.gameState.gameData.player.health += temp;
+                    this.gameState.gameData.player.health += temp * 0.5;
                     if (
                         this.gameState.gameData.player.health >
                         this.gameState.gameData.player.maxHealth

@@ -349,8 +349,14 @@ const menu = {
             let tempText = "Paused - Score: " +
                 Math.round(gameState.gameData.enemySpawner.gameTime / 40);
 
-            ctx.strokeText(tempText, 20, 50);
-            ctx.fillText(tempText, 20, 50);
+            ctx.strokeText(tempText, 20, 90);
+            ctx.fillText(tempText, 20, 90);
+            
+            ctx.font = "40px Monospace";
+            ctx.fillStyle = "Black";
+
+            ctx.strokeText("Time Waster 3000", 20, 50);
+            ctx.fillText("Time Waster 3000", 20, 50);
         },
 
         loop: function(e)

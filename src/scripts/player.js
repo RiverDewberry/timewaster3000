@@ -811,9 +811,9 @@ class Superwarm extends Player
     constructor(gameState)
     {
         super(gameState);
-            this.health = 3;
-            this.maxHealth = 3;
-            this.shotDelaySpeed = 15;
+            this.health = 2.5;
+            this.maxHealth = 2.5;
+            this.shotDelaySpeed = 10;
 
             gameState.addGameObject(
             {
@@ -874,9 +874,11 @@ class PlayerVampire extends Player
                 lastKilledEnemies: 0,
                 update: function(ctx)
                 {
-                    this.gameState.gameData.player.takeDamage(0.005);
+                    this.gameState.gameData.player.takeDamage(
+                        0.005 * this.gameState.gameData.enemySpawner.difficulty
+                    );
                     let temp = this.gameState.gameData.killedEnemies - this.lastKilledEnemies;
-                    this.gameState.gameData.player.health += temp * 0.5;
+                    this.gameState.gameData.player.health += temp * 0.75;
                     if (
                         this.gameState.gameData.player.health >
                         this.gameState.gameData.player.maxHealth

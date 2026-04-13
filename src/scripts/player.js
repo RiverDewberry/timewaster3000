@@ -825,8 +825,12 @@ class Superwarm extends Player
             {
                 gameState: gameState,
                 counter: 0,
+                ticksPassed: 0,
+                prevInput: false,
                 update: function(ctx)
                 {
+
+                    this.ticksPassed++;
 
                     if (
                         acceleratePressed() ||
@@ -838,17 +842,25 @@ class Superwarm extends Player
                         pausePressed() ||
                         exitGamePressed()
                     ) {
-                        this.counter--;
-                        if (this.counter < 0) this.counter = 0;
+                        let temp = Math.round(this.counter * 0.2);
+                        if (this.prevInput === false) this.ticksPassed = 0;
+                        if ((temp === 0) || (this.ticksPassed % temp) === 0)
+                        {
+                            this.counter--;
+                            if (this.counter < 0) this.counter = 0;
 
-                        ctx.fillStyle = "rgba(0,0,0," + (this.counter * 0.002) + ")";
-                        ctx.fillRect(0, 0, 500, 500);
-
-                        return;
+                            ctx.fillStyle = "rgba(0,0,0," + (this.counter * 0.002) + ")";
+                            ctx.fillRect(0, 0, 500, 500);
+                            this.prevInput = true;
+                            return;
+                        }
+                        this.prevInput = true;
+                    } else {
+                        this.prevInput = false;
+                        this.counter += 1;
+                        if (this.counter > 25) this.counter = 25;                        
                     }
 
-                    this.counter += 1;
-                    if (this.counter > 25) this.counter = 25;
                     ctx.fillStyle = "rgba(0,0,0," + (this.counter * 0.002) + ")";
                     ctx.fillRect(0, 0, 500, 500);
 

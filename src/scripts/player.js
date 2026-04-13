@@ -1070,3 +1070,87 @@ class StrangePlayer extends Player
         }
     }
 }
+
+class MenuPlayer extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+        this.gameObject.y = 325;
+        this.ammo = this.maxAmmo;
+        this.dashCount = this.maxDash;
+    }
+
+    start()
+    {
+        this.health = this.maxHealth;
+        this.interval = setInterval(menuPlayerLoop, 25);
+    }
+
+    move()
+    {
+        this.accelerate();
+
+        this.turn();
+        
+        this.deltaX += Math.cos(this.angle) * this.acceleration;
+        this.deltaY += Math.sin(this.angle) * this.acceleration;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+
+        if (velocityMag > this.maxSpeed)
+        {
+            this.deltaX /= velocityMag / this.maxSpeed;
+            this.deltaY /= velocityMag / this.maxSpeed;
+        }
+
+        this.findDashDirection();
+
+        this.gameObject.x += this.deltaX * ((this.slowed) ? 0.2 : 1);
+        this.gameObject.y += this.deltaY * ((this.slowed) ? 0.2 : 1);
+    }
+
+    update()
+    {
+        this.move();
+
+        if (this.gameObject.x < 50)
+        {
+            this.gameObject.x = 50;
+            this.deltaX = 0;
+        }
+
+        if (this.gameObject.y < 270)
+        {
+            this.gameObject.y = 270;
+            this.deltaY = 0;
+        }
+
+        if (this.gameObject.x > 430)
+        {
+            this.gameObject.x = 430;
+            this.deltaX = 0;
+        }
+
+        if (this.gameObject.y > 380)
+        {
+            this.gameObject.y = 380;
+            this.deltaY = 0;
+        }
+
+        menu.menuGame.loop();
+        this.gameObject.update(ctx, this);
+        this.handleExit();
+    }
+
+    handleExit()
+    {
+        if (exitGamePressed())
+        {
+            clearInterval(this.interval);
+            menu.switchMenu(menu.startGameMenu);
+            menu.data.option = 4;
+            menu.startGameMenu.loop({key:""});
+        }
+    }
+}

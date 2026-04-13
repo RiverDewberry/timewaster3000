@@ -44,6 +44,39 @@ const menu = {
         }
     },
 
+    menuGame: {
+        enter: function()
+        {
+            menu.removeMenu();
+            startKeyDownListen();
+            menuPlayer.start();
+        },
+
+        loop: function()
+        {
+            ctx.clearRect(0, 0, 500, 500);
+            
+            ctx.font = "40px Monospace";
+            ctx.fillStyle = "Black";
+
+            ctx.fillText("Time Waster 3000", 20, 50);
+            
+            ctx.font = "15px Monospace";
+            ctx.fillText("https://riverdewberry.dev", 20, 460);
+            ctx.fillText("No AI was used in the creation of this game.", 20, 480);
+            ctx.fillStyle = "#f00";
+            ctx.fillText("Use arrow keys and enter to navigate menu", 20, 75);
+            ctx.fillText("[" + menu.data.controls.exitGame + "] to return", 20, 230);
+            ctx.font = "25px Monospace";
+            ctx.fillStyle = "#000";
+
+            ctx.fillText("[ ] Start:  easy  normal  hard", 20, 110);
+            ctx.fillText("[ ] Tutorial", 20, 140);
+            ctx.fillText("[ ] View/edit controls", 20, 170);
+            ctx.fillText("[ ] Select player type", 20, 200);
+        }
+    },
+
     startGameMenu: {
         enter: function()
         {
@@ -82,7 +115,7 @@ const menu = {
             else if (e.key === "ArrowUp") menu.data.option--;
 
             if (menu.data.option === -1) menu.data.option += 1;
-            if (menu.data.option === 4) menu.data.option -= 1;
+            if (menu.data.option === 5) menu.data.option -= 1;
 
             if (menu.data.option === 0)
             {
@@ -104,6 +137,9 @@ const menu = {
                 ctx.fillText((i === menu.data.option) ? "[x" : "[ ", 20, 110 + 30 * i);
             }
 
+            if (menu.data.option === 4) menuPlayer.health = menuPlayer.maxHealth * 0.667;
+            else menuPlayer.health = menuPlayer.maxHealth * 0.333;
+
             if (menu.data.option === 0)
             {
                 switch (menu.data.suboption)
@@ -121,6 +157,8 @@ const menu = {
                         break;
                 }
             }
+
+            menuPlayer.draw(ctx, menuPlayer);
 
             if (e.key === "Enter")
             {
@@ -141,6 +179,9 @@ const menu = {
                     menu.switchMenu(menu.controlsMenu);
                 } else if (menu.data.option === 3){
                     menu.switchMenu(menu.playerSelectionMenu);
+                } else if (menu.data.option == 4)
+                {
+                    menu.menuGame.enter();
                 }
             }
         }
@@ -425,5 +466,11 @@ const gameState = new GameState(ctx, 25,
     function() {menu.switchMenu(menu.deathMenu);},
     function() {menu.switchMenu(menu.pauseMenu);}
 );
+
+let menuPlayer = new MenuPlayer(gameState);
+function menuPlayerLoop()
+{
+    menuPlayer.update(ctx);
+}
 
 menu.switchMenu(menu.startGameMenu);

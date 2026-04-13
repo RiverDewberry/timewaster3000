@@ -18,7 +18,7 @@ const menu = {
             decelerate: "ArrowDown",
             turnLeft: "ArrowLeft",
             turnRight: "ArrowRight",
-            shoot: " ",
+            shoot: "Space",
             dash: "x",
             pause: "p",
             exitGame: "Escape"
@@ -72,8 +72,9 @@ const menu = {
             ctx.fillStyle = "#000";
 
             ctx.fillText("  ] Start:  easy  normal  hard", 20, 110);
-            ctx.fillText("  ] View/edit controls", 20, 140);
-            ctx.fillText("  ] Select player type", 20, 170);
+            ctx.fillText("  ] Tutorial", 20, 140);
+            ctx.fillText("  ] View/edit controls", 20, 170);
+            ctx.fillText("  ] Select player type", 20, 200);
 
             let prevOption = menu.data.option;
 
@@ -81,7 +82,7 @@ const menu = {
             else if (e.key === "ArrowUp") menu.data.option--;
 
             if (menu.data.option === -1) menu.data.option += 1;
-            if (menu.data.option === 3) menu.data.option -= 1;
+            if (menu.data.option === 4) menu.data.option -= 1;
 
             if (menu.data.option === 0)
             {
@@ -98,7 +99,7 @@ const menu = {
             if (menu.data.suboption === -1) menu.data.suboption += 1;
             if (menu.data.suboption === menu.data.suboptionNum) menu.data.suboption -= 1;
 
-            for (let i = 0; i < 3; i++)
+            for (let i = 0; i < 4; i++)
             {
                 ctx.fillText((i === menu.data.option) ? "[x" : "[ ", 20, 110 + 30 * i);
             }
@@ -131,9 +132,14 @@ const menu = {
                         menu.data.difficultyRatings[menu.data.suboption],
                         menu.data.playerType
                     );
-                } else if (menu.data.option === 1) {
+                } else if (menu.data.option === 1)
+                {
+                    menu.removeMenu();
+                    startKeyDownListen();
+                    gameState.beginTutorial();
+                } else if (menu.data.option === 2) {
                     menu.switchMenu(menu.controlsMenu);
-                } else {
+                } else if (menu.data.option === 3){
                     menu.switchMenu(menu.playerSelectionMenu);
                 }
             }
@@ -153,7 +159,7 @@ const menu = {
             {
                 if (menu.data.controls[elem] === "Enter a key")
                 {
-                    menu.data.controls[elem] = e.key;
+                    menu.data.controls[elem] = (e.key === " ") ? "Space" : e.key;
                     e = {key: ""};
                     break;
                 }
@@ -346,8 +352,7 @@ const menu = {
             ctx.miterLimit = 2;
             ctx.lineJoin = 'circle';
 
-            let tempText = "Paused - Score: " +
-                Math.round(gameState.gameData.enemySpawner.gameTime / 40);
+            let tempText = "(Paused)";
 
             ctx.strokeText(tempText, 20, 90);
             ctx.fillText(tempText, 20, 90);

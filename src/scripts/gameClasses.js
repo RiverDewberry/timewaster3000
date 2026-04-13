@@ -82,6 +82,7 @@ class GameState
                 gameState.gameObjects.splice(i, 1);
             }
         }
+        
         if (pausePressed()) gameState.pauseMenu();
     }
 
@@ -91,6 +92,27 @@ class GameState
         this.initSession();
         new EnemySpawner(this, difficulty);
         playerTypes[type].spawn(this);
+        this.intervalTracker = setInterval(this.tick, this.tickSpeed, this);
+    }
+
+    beginTutorial()
+    {
+        this.running = true;
+
+        this.gameObjects = [];
+        this.tempObjects = [];
+        this.gameData = {
+            player: null,
+            tutorialManager: null,
+            dashlines: [],
+            bullets: [],
+            enemies: [],
+            killedEnemies: 0
+        };
+        this.idCounter = 0;
+
+        new TutorialManager(this);
+        new TutorialPlayer(this);
         this.intervalTracker = setInterval(this.tick, this.tickSpeed, this);
     }
 

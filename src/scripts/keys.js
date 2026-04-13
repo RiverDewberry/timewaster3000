@@ -1,15 +1,19 @@
 let keysDown = [];
 
 function keysDownAdd(e) {
-    if (!keysDown.includes(e.key))
-        keysDown.push(e.key);
+    let key = (e.key === " ") ? "Space" : e.key;
+
+    if (!keysDown.includes(key))
+        keysDown.push(key);
 }
 
 function keysDownRemove(e) {
-    if (keysDown.includes(e.key)) {
-        if (e.key === "Shift")
+    let key = (e.key === " ") ? "Space" : e.key;
+
+    if (keysDown.includes(key)) {
+        if (key === "Shift")
             keysDown = keysDown.slice(0, keysDown.indexOf("Shift"));
-        keysDown.splice(keysDown.indexOf(e.key), 1);
+        keysDown.splice(keysDown.indexOf(key), 1);
     };
 }
 

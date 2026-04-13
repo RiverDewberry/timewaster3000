@@ -170,14 +170,20 @@ class Player
             else this.health = this.maxHealth;
         }
 
+        this.handleExit();
+
+        this.gameObject.update(ctx, this);
+    }
+
+    handleExit()
+    {
         if (exitGamePressed())
         {
             this.health = -1;
             gameState.end();
         }
-
-        this.gameObject.update(ctx, this);
     }
+
 
     takeDamage(amount)
     {

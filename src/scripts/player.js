@@ -22,6 +22,12 @@ const playerTypes = [
     },
 
     {
+        name: "Recoil",
+        spawn: (g)=>{new Recoil(g);},
+        description: "More ammo, but each shot has recoil."
+    },
+
+    {
         name: "Glass Cannon",
         spawn: (g)=>{new GlassCannon(g);},
         description: "So much damage, so little health."
@@ -35,6 +41,12 @@ const playerTypes = [
             g.gameData.player.health *= 0.5;
         },
         description: "Spawn at score 750 with half of max health."
+    },
+
+    {
+        name: "Minelayer",
+        spawn: (g)=>{new Minelayer(g);},
+        description: "Lay mines instead of shooting bullets."
     },
 
     {
@@ -674,6 +686,37 @@ class PlayerTank extends Player
     }
 }
 
+class Recoil extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+        this.maxAmmo = 25;
+    }
+
+    shoot()
+    {
+        if (shootPressed() && (this.shotDelayTimer <= 0) && (this.ammo >= 1))
+        {
+            new Bullet(this.gameState, this);
+            this.ammo -= 1;
+            this.shotDelayTimer = this.shotDelaySpeed;
+            this.deltaX -= Math.cos(this.angle);
+            this.deltaY -= Math.sin(this.angle);
+        } else {
+            this.shotDelayTimer -= 1;
+
+            if (this.ammo < this.maxAmmo)
+            {
+                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.0025);
+            } else {
+                this.ammo = this.maxAmmo;
+            }
+        }
+    }
+
+}
+
 class TurretBullet extends Bullet
 {
     constructor(gameState, player)
@@ -875,6 +918,93 @@ class Superwarm extends Player
             },
             6
         );
+    }
+}
+
+class Mine extends Bullet
+{
+    constructor(gameState, player)
+    {
+        super(gameState, player)
+        this.counter = 0;
+
+        let mag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        
+        let newMag = mag * 0.1;
+
+        this.deltaX *= newMag * (1 / mag);
+        this.deltaY *= newMag * (1 / mag);
+
+        this.gameObject.x += mag;
+        this.gameObject.y += mag;
+        this.gameObject.width = newMag * 2;
+        this.gameObject.height = newMag * 2;
+        this.gameObject.x -= newMag;
+        this.gameObject.y -= newMag;
+    }
+
+    update(ctx)
+    {
+        this.counter++;
+        if (this.counter < 150) 
+        {
+            this.gameObject.update(ctx, this);
+            return;
+        }
+
+        let mag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        
+        let newMag = mag;
+
+        if (this.counter < 200) newMag *= 1.06;
+        else if (this.counter > 500) newMag -= 0.1;
+
+        this.deltaX *= newMag * (1 / mag);
+        this.deltaY *= newMag * (1 / mag);
+
+        this.gameObject.x += mag;
+        this.gameObject.y += mag;
+        this.gameObject.width = newMag * 2;
+        this.gameObject.height = newMag * 2;
+        this.gameObject.x -= newMag;
+        this.gameObject.y -= newMag;
+
+        if (newMag < 1)
+        {
+            this.killBullet();
+            return;
+        }
+
+        this.gameObject.update(ctx, this);
+    }
+}
+
+class Minelayer extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+        this.maxAmmo = 5;
+        this.shotDelaySpeed = 15;
+    }
+
+    shoot()
+    {
+        if (shootPressed() && (this.shotDelayTimer <= 0) && (this.ammo >= 1))
+        {
+            new Mine(this.gameState, this);
+            this.ammo -= 1;
+            this.shotDelayTimer = this.shotDelaySpeed;
+        } else {
+            this.shotDelayTimer -= 1;
+
+            if (this.ammo < this.maxAmmo)
+            {
+                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.0005);
+            } else {
+                this.ammo = this.maxAmmo;
+            }
+        }
     }
 }
 

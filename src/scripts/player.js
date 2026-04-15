@@ -22,6 +22,12 @@ const playerTypes = [
     },
 
     {
+        name: "Sniper",
+        spawn: (g)=>{new Sniper(g);},
+        description: "Bullets become more powerful at longer range."
+    },
+
+    {
         name: "Recoil",
         spawn: (g)=>{new Recoil(g);},
         description: "More ammo, but each shot has recoil."
@@ -53,6 +59,12 @@ const playerTypes = [
         name: "Vampire",
         spawn: (g)=>{new PlayerVampire(g);},
         description: "Blood is Fuel. Don't run out."
+    },
+
+    {
+        name: "Melee",
+        spawn: (g)=>{new Melee(g);},
+        description: "Very short range."
     },
 
     {
@@ -1001,6 +1013,186 @@ class Minelayer extends Player
             if (this.ammo < this.maxAmmo)
             {
                 this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.0005);
+            } else {
+                this.ammo = this.maxAmmo;
+            }
+        }
+    }
+}
+
+class SniperBullet extends Bullet
+{
+    constructor(gameState, player)
+    {
+        super(gameState, player);
+        this.prevMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        this.hasTakenDamage = false;
+    }
+
+    update(ctx)
+    {
+        let mag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        
+        if (mag < this.prevMag) this.hasTakenDamage = true;
+        this.prevMag = mag;
+
+        let newMag = mag;
+
+        if (!this.hasTakenDamage) newMag *= 1.06;
+
+        this.deltaX *= newMag * (1 / mag);
+        this.deltaY *= newMag * (1 / mag);
+
+        this.gameObject.x += mag;
+        this.gameObject.y += mag;
+        this.gameObject.width = newMag * 2;
+        this.gameObject.height = newMag * 2;
+        this.gameObject.x -= newMag;
+        this.gameObject.y -= newMag;
+
+        if (Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY) < 1)
+        {
+            this.killBullet();
+            return;
+        }
+
+        this.gameObject.x += this.deltaX;
+        this.gameObject.y += this.deltaY;
+        
+        this.displayBullet.x += this.deltaX;
+        this.displayBullet.y += this.deltaY;
+
+        if ((this.gameObject.x < (-1 * this.gameObject.width)) ||
+            (this.gameObject.y < (-1 * this.gameObject.height)) ||
+            (this.gameObject.x > (this.gameObject.width + 500)) ||
+            (this.gameObject.y > (this.gameObject.height + 500))
+        )
+            this.killBullet();
+
+        this.gameObject.update(ctx, this);
+    }
+}
+
+class Sniper extends Player
+{
+   constructor(gameState)
+    {
+        super(gameState);
+        this.maxAmmo = 5;
+        this.shotDelaySpeed = 15;
+    }
+
+    turn()
+    {
+        if (turnLeftPressed()) this.angle -= 7.5 /
+            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
+        if (turnRightPressed()) this.angle += 7.5 /
+            (0.75 + this.acceleration * 1.25) * Math.PI / 180;
+    }
+
+    shoot()
+    {
+        if (shootPressed() && (this.shotDelayTimer <= 0) && (this.ammo >= 1))
+        {
+            new SniperBullet(this.gameState, this);
+            this.ammo -= 1;
+            this.shotDelayTimer = this.shotDelaySpeed;
+        } else {
+            this.shotDelayTimer -= 1;
+
+            if (this.ammo < this.maxAmmo)
+            {
+                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.002);
+            } else {
+                this.ammo = this.maxAmmo;
+            }
+        }
+    }
+}
+
+class MeleeBullet extends Bullet
+{
+    constructor(gameState, player)
+    {
+        super(gameState, player);
+
+        let mag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        let newMag = mag * 5;
+
+        this.deltaX *= newMag * (1 / mag);
+        this.deltaY *= newMag * (1 / mag);
+
+        this.gameObject.x += mag;
+        this.gameObject.y += mag;
+        this.gameObject.width = newMag * 2;
+        this.gameObject.height = newMag * 2;
+        this.gameObject.x -= newMag;
+        this.gameObject.y -= newMag;
+    }
+
+    update(ctx)
+    {
+        let mag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        
+        let newMag = mag;
+
+        newMag *= 0.5;
+
+        this.deltaX *= newMag * (1 / mag);
+        this.deltaY *= newMag * (1 / mag);
+
+        this.gameObject.x += mag;
+        this.gameObject.y += mag;
+        this.gameObject.width = newMag * 2;
+        this.gameObject.height = newMag * 2;
+        this.gameObject.x -= newMag;
+        this.gameObject.y -= newMag;
+
+        if (Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY) < 1)
+        {
+            this.killBullet();
+            return;
+        }
+
+        this.gameObject.x += this.deltaX;
+        this.gameObject.y += this.deltaY;
+        
+        this.displayBullet.x += this.deltaX;
+        this.displayBullet.y += this.deltaY;
+
+        if ((this.gameObject.x < (-1 * this.gameObject.width)) ||
+            (this.gameObject.y < (-1 * this.gameObject.height)) ||
+            (this.gameObject.x > (this.gameObject.width + 500)) ||
+            (this.gameObject.y > (this.gameObject.height + 500))
+        )
+            this.killBullet();
+
+        this.gameObject.update(ctx, this);
+    }
+}
+
+
+class Melee extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+        this.maxAmmo = 1;
+    }
+
+    shoot()
+    {
+        if (shootPressed() && (this.shotDelayTimer <= 0) && (this.ammo >= 1))
+        {
+            new MeleeBullet(this.gameState, this);
+            this.ammo -= 1;
+            this.shotDelayTimer = this.shotDelaySpeed;
+        } else {
+            this.shotDelayTimer -= 1;
+
+            if (this.ammo < this.maxAmmo)
+            {
+                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.004);
             } else {
                 this.ammo = this.maxAmmo;
             }

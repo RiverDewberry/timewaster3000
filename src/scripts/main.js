@@ -201,6 +201,15 @@ const menu = {
                 if (menu.data.controls[elem] === "Enter a key")
                 {
                     menu.data.controls[elem] = (e.key === " ") ? "Space" : e.key;
+
+                    for (elem2 in menu.data.controls)
+                    {
+                        if (elem2 === elem) continue;
+
+                        if (menu.data.controls[elem2] === menu.data.controls[elem])
+                            menu.data.controls[elem2] = "Enter a key"
+                    }
+
                     e = {key: ""};
                     break;
                 }

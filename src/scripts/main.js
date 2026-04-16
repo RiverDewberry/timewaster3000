@@ -345,12 +345,15 @@ const menu = {
                 } else menu.data.playerType = menu.data.suboption;
             }
 
-            if (e.key === "ArrowLeft")
+            if (menu.data.option === 1)
             {
-                if (menu.data.suboption > 0) menu.data.suboption--;
-            } else if (e.key === "ArrowRight")
-            {
-                if ((menu.data.suboption + 1) < playerTypes.length) menu.data.suboption++;   
+                if (e.key === "ArrowLeft")
+                {
+                    if (menu.data.suboption > 0) menu.data.suboption--;
+                } else if (e.key === "ArrowRight")
+                {
+                    if ((menu.data.suboption + 1) < playerTypes.length) menu.data.suboption++;   
+                }
             }
 
             ctx.fillText("Type: " + playerTypes[menu.data.suboption].name + " {" + (

@@ -897,11 +897,11 @@ class Superwarm extends Player
                         pausePressed() ||
                         exitGamePressed()
                     ) {
-                        let temp = Math.round(this.counter * 0.2);
+                        let temp = Math.round(this.counter * 0.1);
                         if (this.prevInput === false) this.ticksPassed = 0;
                         if ((temp === 0) || (this.ticksPassed % temp) === 0)
                         {
-                            this.counter--;
+                            this.counter -= temp;
                             if (this.counter < 0) this.counter = 0;
 
                             ctx.fillStyle = "rgba(0,0,0," + (this.counter * 0.002) + ")";

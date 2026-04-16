@@ -30,7 +30,7 @@ const playerTypes = [
     {
         name: "Recoil",
         spawn: (g)=>{new Recoil(g);},
-        description: "More ammo, but each shot has recoil."
+        description: "Much more ammo, but you can only move from recoil."
     },
 
     {
@@ -703,28 +703,77 @@ class Recoil extends Player
     constructor(gameState)
     {
         super(gameState);
-        this.maxAmmo = 25;
+        this.maxAmmo = 50;
+        this.shotDelayTimer = 1;
+        this.maxSpeed = 6;
+    }
+
+    accelerate()
+    {
+        this.acceleration = (shootPressed() && (this.ammo >= 1)) ? 0.5 : -0.05;
+
+        this.deltaX *= 0.995;
+        this.deltaY *= 0.995;
     }
 
     shoot()
     {
         if (shootPressed() && (this.shotDelayTimer <= 0) && (this.ammo >= 1))
         {
+            this.deltaX *= -1;
+            this.deltaY *= -1;
             new Bullet(this.gameState, this);
+            this.deltaX *= -1;
+            this.deltaY *= -1;
             this.ammo -= 1;
             this.shotDelayTimer = this.shotDelaySpeed;
-            this.deltaX -= Math.cos(this.angle);
-            this.deltaY -= Math.sin(this.angle);
+            this.deltaX -= 2 * Math.cos(this.angle);
+            this.deltaY -= 2 * Math.sin(this.angle);
         } else {
             this.shotDelayTimer -= 1;
 
             if (this.ammo < this.maxAmmo)
             {
-                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.0025);
+                this.ammo += Math.max(0, -1 * this.shotDelayTimer * 0.05);
             } else {
                 this.ammo = this.maxAmmo;
             }
         }
+    }
+
+    move()
+    {
+        if (dashPressed() && this.dashCount >= 1)
+        {
+            this.state = playerStates.dash;
+            this.dashCount -= 1;
+            this.dashTimer = 0;
+            new DashEffect(this.gameState, this);
+            this.dash();
+            return;
+        } else {
+            this.dashTimer += 0.002;
+            this.dashCount += this.dashTimer * 1 / (0.25 + Math.sqrt(
+                this.deltaX * this.deltaX + this.deltaY * this.deltaY
+            ));
+            if (this.dashCount > this.maxDash) this.dashCount = this.maxDash;
+        }
+
+        this.accelerate();
+        this.turn();
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+
+        if (velocityMag > this.maxSpeed)
+        {
+            this.deltaX /= velocityMag / this.maxSpeed;
+            this.deltaY /= velocityMag / this.maxSpeed;
+        }
+
+        this.findDashDirection();
+
+        this.gameObject.x += this.deltaX * ((this.slowed) ? 0.2 : 1);
+        this.gameObject.y += this.deltaY * ((this.slowed) ? 0.2 : 1);
     }
 
 }

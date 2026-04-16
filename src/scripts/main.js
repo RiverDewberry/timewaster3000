@@ -327,13 +327,11 @@ const menu = {
             else if (e.key === "ArrowUp") menu.data.option--;
 
             if (menu.data.option < 0) menu.data.option = 0;
-            if (menu.data.option > 3) menu.data.option = 3;
+            if (menu.data.option > 1) menu.data.option = 1;
 
             ctx.fillText((menu.data.option === 0) ? "[x" : "[ ", 20, 110);
-            for(let i = 1; i < 4; i++)
-            {
-                ctx.fillText((menu.data.option === i) ? "[x" : "[ ", 20, 320 + 30 * i);
-            }
+            ctx.fillText((menu.data.option === 0) ? " V" : "", 20, 140);
+            ctx.fillText((menu.data.option === 1) ? "  x" : "", 20, 380);
 
             ctx.fillText("  ] Back to main menu", 20, 110);
 
@@ -344,36 +342,27 @@ const menu = {
                     startKeyDownListen();
                     menu.switchMenu(menu.startGameMenu);
                     return;
-                } else switch (menu.data.option)
-                {
-                    case 1:
-                        if (menu.data.suboption > 0) menu.data.suboption--;
-                        break;
+                } else menu.data.playerType = menu.data.suboption;
+            }
 
-                    case 2:
-                        menu.data.playerType = menu.data.suboption;
-                        break;
-
-                    case 3:
-                        if ((menu.data.suboption + 1) < playerTypes.length)
-                            menu.data.suboption++;
-
-                    default: break;
-                }
+            if (e.key === "ArrowLeft")
+            {
+                if (menu.data.suboption > 0) menu.data.suboption--;
+            } else if (e.key === "ArrowRight")
+            {
+                if ((menu.data.suboption + 1) < playerTypes.length) menu.data.suboption++;   
             }
 
             ctx.fillText("Type: " + playerTypes[menu.data.suboption].name + " {" + (
                     (menu.data.suboption === menu.data.playerType) ? "x" : " "
-                ) + "}", 20, 170);
+                ) + "}", 20, 200);
 
-            ctx.fillText("  ] Go to previous type", 20, 350);
-            ctx.fillText("  ] Go to next type", 20, 410);
-
-            ctx.fillText("Description: ", 20, 230);
+            ctx.fillText("Description: ", 20, 260);
 
             ctx.fillText(
-                "  ] Select" + ((menu.data.suboption === menu.data.playerType) ? "ed" : "")
-                + " type: (" + (menu.data.suboption + 1) + "/" + playerTypes.length + ")",
+                "<- -> (" + (menu.data.suboption + 1) + "/" + playerTypes.length + ")" +
+                " Select" + ((menu.data.suboption === menu.data.playerType) ? "ed" : "")
+                + " type",
                 20, 380);
             ctx.fillText("  ] Back to main menu", 20, 110);
 
@@ -382,7 +371,7 @@ const menu = {
             const tempText = playerTypes[menu.data.suboption].description.split("\n");
             
             for (let i = 0; i < tempText.length; i++) {
-                ctx.fillText(tempText[i], 20, 260 + 20 * i);
+                ctx.fillText(tempText[i], 20, 290 + 20 * i);
             }
         }
     },

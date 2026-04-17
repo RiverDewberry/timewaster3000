@@ -769,7 +769,6 @@ class DashEnemy extends Enemy
      
         this.maxSpeed = 4;
         this.acceleration = 4;
-        this.shotTimer = 0;
 
         this.deltaX = 0;
         this.deltaY = 0;
@@ -942,7 +941,9 @@ class DashEnemy extends Enemy
                 data.gameObject.height
             );
 
-            ctx.fillStyle = "Grey";
+            let dashBarCharge = (128 + (211 - 128) * ((49 - data.dashTimer) / 40));
+
+            ctx.fillStyle = "rgb("+dashBarCharge+","+dashBarCharge+","+dashBarCharge+")";
             ctx.fillRect(
                 data.gameObject.x + data.gameObject.width * 
                 (data.dashDirection.x - Math.abs(data.dashDirection.y)) + 4,

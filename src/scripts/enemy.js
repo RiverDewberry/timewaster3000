@@ -579,8 +579,10 @@ class ArcherEnemy extends Enemy
         let player = this.gameState.gameData.player;
 
         let distToPlayer = Math.sqrt(
-            Math.pow(playerObject.y + 5 - this.gameObject.y, 2) +
-            Math.pow(playerObject.x + 5- this.gameObject.x, 2)
+            Math.pow(playerObject.y + 5 + Math.sign(playerObject.y - this.gameObject.y) *
+                (player.deltaY - this.deltaY) * 5 - this.gameObject.y, 2) +
+            Math.pow(playerObject.x + Math.sign(playerObject.x - this.gameObject.x) *
+                (player.deltaX - this.deltaX) * 5 - this.gameObject.x, 2)
         );
 
         this.shotAngle = Math.atan2(
@@ -719,8 +721,8 @@ class ArcherProjectile extends Enemy
             2
         );
 
-        this.deltaX = Math.cos(angle) * 5 + archer.deltaX;
-        this.deltaY = Math.sin(angle) * 5 + archer.deltaY;
+        this.deltaX = Math.cos(angle) * 6 + archer.deltaX;
+        this.deltaY = Math.sin(angle) * 6 + archer.deltaY;
     }
 
     update(ctx)

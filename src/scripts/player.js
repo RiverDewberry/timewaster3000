@@ -275,10 +275,13 @@ class Player
 
         let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
 
-        if (velocityMag > this.maxSpeed)
+        if (this.maxSpeed !== undefined)
         {
-            this.deltaX /= velocityMag / this.maxSpeed;
-            this.deltaY /= velocityMag / this.maxSpeed;
+            if (velocityMag > this.maxSpeed)
+            {
+                this.deltaX /= velocityMag / this.maxSpeed;
+                this.deltaY /= velocityMag / this.maxSpeed;
+            }
         }
 
         this.findDashDirection();
@@ -1293,6 +1296,7 @@ class MaximumSpeed extends Player
         this.maxHealth = 7;
         this.maxAmmo = 5;
         this.maxDash = 1;
+        this.maxSpeed = undefined;
     }
 
     turn()

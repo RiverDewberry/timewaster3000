@@ -539,7 +539,6 @@ class ArcherEnemy extends Enemy
         this.move();
         this.boundEnemyOnceEntered();
         this.getShotAngle();
-        this.shoot();
 
         if (this.health < 0)
         {
@@ -549,6 +548,7 @@ class ArcherEnemy extends Enemy
         this.collideWithBullets();
 
         this.gameObject.update(ctx, this);
+        this.shoot();
     }
 
     shoot()
@@ -557,7 +557,7 @@ class ArcherEnemy extends Enemy
 
         let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
         
-        this.shotTimer += 1 / (velocityMag + 1);
+        this.shotTimer += 1.5 / (velocityMag + 1);
 
         if (this.shotTimer > 20)
         {
@@ -567,7 +567,8 @@ class ArcherEnemy extends Enemy
                 this.gameState,
                 this.gameObject.x,
                 this.gameObject.y,
-                this.shotAngle
+                this.shotAngle,
+                this
             );
         }
     }
@@ -698,7 +699,7 @@ class ArcherEnemy extends Enemy
 
 class ArcherProjectile extends Enemy
 {
-    constructor(gameState, x, y, angle)
+    constructor(gameState, x, y, angle, archer)
     {
         let xDirection = Math.cos(angle);
         let yDirection = Math.sin(angle);
@@ -718,8 +719,8 @@ class ArcherProjectile extends Enemy
             2
         );
 
-        this.deltaX = Math.cos(angle) * 5;
-        this.deltaY = Math.sin(angle) * 5;
+        this.deltaX = Math.cos(angle) * 5 + archer.deltaX;
+        this.deltaY = Math.sin(angle) * 5 + archer.deltaY;
     }
 
     update(ctx)

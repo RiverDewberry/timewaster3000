@@ -4,7 +4,8 @@ const enemyTypes = {
     archerProjectile: 2,
     dash: 3,
     dashLine: 4,
-    tank: 5
+    tank: 5,
+    spawner: 6
 };
 
 const enemyScaling = [
@@ -102,6 +103,15 @@ const enemyScaling = [
             gameState.gameData.enemySpawner.enemySpawnTimerTarget += delay;
             enemyScaling.splice(5, 0, ...temp);
         }
+    },
+
+    {
+        scaleStart: 100,
+        scaleEnd: 200,
+        fullWeight: 1,
+        delayFactor: 4,
+        spawn: function(gs, x, y) {new Spawner(gs, x, y);},
+        curentWeight: null
     }
 ];
 
@@ -324,8 +334,7 @@ class Enemy
                 
                 if (newVelocity < 1)
                 {
-                    bullet.deltaX = 0;
-                    bullet.deltaY = 0;
+                    bullet.killBullet();
                 }
 
                 bullet.deltaX *= newVelocity * (1 / bulletVelocity);
@@ -1214,6 +1223,153 @@ class TankEnemy extends Enemy
             data.gameObject.y + data.shieldWidth * 0.5,
             data.gameObject.width - data.shieldWidth,
             data.gameObject.height - data.shieldWidth
+        );
+    }
+}
+
+class Spawner extends Enemy
+{
+    constructor(gameState, x, y)
+    {
+        super(gameState, x, y, 30, 30, 10, 5, enemyTypes.spawner, 2);
+     
+        this.maxSpeed = 2;
+        this.acceleration = 2;
+        this.spawnTimer = 0;
+        this.stunned = false;
+
+        this.deltaX = 0;
+        this.deltaY = 0;
+        this.theta = 0.5 + Math.atan2(
+            y - gameState.gameData.player.gameObject.y,
+            x - gameState.gameData.player.gameObject.x
+        );
+
+        this.deltaTheta = 0.0025 * ((Math.random() > 0.5) ? 1 : -1);
+    }
+
+    move()
+    {
+        this.theta += this.deltaTheta;
+
+        let player = this.gameState.gameData.player;
+
+        let targetCenterX = (
+            player.gameObject.x + player.gameObject.width * 0.5 + 300 * Math.cos(this.theta)
+        );
+        let targetCenterY = (
+            player.gameObject.y + player.gameObject.height * 0.5 + 300 * Math.sin(this.theta)
+        );
+
+        if (!this.enteredArea)
+        {
+            targetCenterX = player.gameObject.x + player.gameObject.width * 0.5;
+            targetCenterY = player.gameObject.y + player.gameObject.height * 0.5;
+        }
+
+        if ((targetCenterX < 0 || targetCenterX > 500 ||
+            targetCenterY < 0 || targetCenterY > 500)
+        )
+        {
+            let newTargetCenterX = (
+                player.gameObject.x + player.gameObject.width * 0.5 + 200 * Math.cos(
+                    this.theta + -10 * this.deltaTheta
+                )
+            );
+            let newTargetCenterY = (
+                player.gameObject.y + player.gameObject.height * 0.5 + 200 * Math.sin(
+                    this.theta + -10 * this.deltaTheta
+                )
+            );            
+
+            if (!(newTargetCenterX < 0 || newTargetCenterX > 500 ||
+                newTargetCenterY < 0 || newTargetCenterY > 500)
+            )
+            {
+                this.deltaTheta *= -1;
+                this.theta += this.deltaTheta * 10;
+            }
+        }
+
+        let enemyCenterX = (this.gameObject.x + this.gameObject.width * 0.5);
+        let enemyCenterY = (this.gameObject.y + this.gameObject.height * 0.5);
+
+        this.deltaX += this.acceleration * (targetCenterX > enemyCenterX) ? 0.1 : -0.1;
+        this.deltaY += this.acceleration * (targetCenterY > enemyCenterY) ? 0.1 : -0.1;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+
+        if (velocityMag > this.maxSpeed)
+        {
+            this.deltaX /= velocityMag / this.maxSpeed;
+            this.deltaY /= velocityMag / this.maxSpeed;
+        }
+
+        this.collideWithDashlines();
+
+        if (this.stunned === false)
+        {
+            this.gameObject.x += this.deltaX;
+            this.gameObject.y += this.deltaY;
+        } else {
+            this.gameObject.x += this.deltaX * 0.1;
+            this.gameObject.y += this.deltaY * 0.1;
+        }
+    }
+
+    update(ctx)
+    {
+        this.move();
+        this.boundEnemyOnceEntered();
+        this.spawn();
+
+        if (this.health < 0)
+        {
+            this.killEnemy();
+            return;
+        }
+        this.collideWithBullets();
+
+        this.gameObject.update(ctx, this);
+    }
+
+    spawn()
+    {
+        if (this.health === 0 || this.stunned) return;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+        
+        this.spawnTimer += 1 / (velocityMag + 1);
+
+        if (this.spawnTimer > 25)
+        {
+            this.spawnTimer = 0;
+
+            new BasicEnemy(
+                this.gameState,
+                this.gameObject.x + 10,
+                this.gameObject.y + 10,
+            );
+        }
+    }
+
+    draw(ctx, data)
+    {
+        ctx.fillStyle = "Gray";
+        ctx.fillRect(
+            data.gameObject.x + 1,
+            data.gameObject.y + 1,
+            data.gameObject.width - 2,
+            data.gameObject.height - 2
+        );
+        
+        ctx.strokeStyle = "Black";
+        ctx.lineWidth = 10 + data.spawnTimer * 0.1;
+        ctx.strokeRect(
+            data.gameObject.x + 5 + data.spawnTimer * 0.05,
+            data.gameObject.y + 5 + data.spawnTimer * 0.05,
+            data.gameObject.width - 10 - data.spawnTimer * 0.1,
+            data.gameObject.height - 10 - data.spawnTimer * 0.1
         );
     }
 }

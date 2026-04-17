@@ -683,10 +683,10 @@ class ArcherEnemy extends Enemy
 
         ctx.fillStyle = "Grey";
         ctx.fillRect(
-            data.gameObject.x + 4 + 14 * xDirection,
-            data.gameObject.y + 4 + 14 * yDirection,
-            6,
-            6,
+            data.gameObject.x + 7 + 14 * xDirection - data.shotTimer * 0.25,
+            data.gameObject.y + 7 + 14 * yDirection - data.shotTimer * 0.25,
+            data.shotTimer * 0.5,
+            data.shotTimer * 0.5,
         );        
     }
 
@@ -1341,7 +1341,7 @@ class Spawner extends Enemy
         
         this.spawnTimer += 1 / (velocityMag + 1);
 
-        if (this.spawnTimer > 25)
+        if (this.spawnTimer > 50)
         {
             this.spawnTimer = 0;
 

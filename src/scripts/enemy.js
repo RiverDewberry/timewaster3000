@@ -1235,10 +1235,10 @@ class Spawner extends Enemy
 {
     constructor(gameState, x, y)
     {
-        super(gameState, x, y, 30, 30, 10, 5, enemyTypes.spawner, 2);
+        super(gameState, x, y, 30, 30, 40, 5, enemyTypes.spawner, 2);
      
         this.maxSpeed = 2;
-        this.acceleration = 2;
+        this.acceleration = 5;
         this.spawnTimer = 0;
         this.stunned = false;
 

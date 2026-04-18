@@ -341,6 +341,8 @@ const menu = {
                 {
                     startKeyDownListen();
                     menu.switchMenu(menu.startGameMenu);
+                    menu.data.option = 3;
+                    menu.startGameMenu.loop({kay:""});
                     return;
                 } else menu.data.playerType = menu.data.suboption;
             }
@@ -363,9 +365,8 @@ const menu = {
             ctx.fillText("Description: ", 20, 260);
 
             ctx.fillText(
-                "<- -> (" + (menu.data.suboption + 1) + "/" + playerTypes.length + ")" +
-                " Select" + ((menu.data.suboption === menu.data.playerType) ? "ed" : "")
-                + " type",
+                "<- ->" + ((menu.data.suboption === menu.data.playerType) ? "" : " Select type") +
+                " (" + (menu.data.suboption + 1) + "/" + playerTypes.length + ")",
                 20, 380);
             ctx.fillText("  ] Back to main menu", 20, 110);
 

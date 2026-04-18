@@ -1,4 +1,4 @@
-const playerStates = {move: 0, dash: 1, dead: 2};
+const playerStates = {move: 0, dash: 1, dead: 2, fragileDash: 3};
 
 function acceleratePressed() {return keysDown.includes(menu.data.controls.accelerate);}
 function deceleratePressed() {return keysDown.includes(menu.data.controls.decelerate);}
@@ -25,6 +25,12 @@ const playerTypes = [
         name: "Sniper",
         spawn: (g)=>{new Sniper(g);},
         description: "Bullets become more powerful at longer range."
+    },
+
+    {
+        name: "Fragile",
+        spawn: (g)=>{new FragilePlayer(g);},
+        description: "Dashing no longer gives you invulnerability,\nbut you can dash more."
     },
 
     {
@@ -1463,6 +1469,154 @@ class StrangePlayer extends Player
             }
         }
     }
+}
+
+class FragilePlayer extends Player
+{
+    constructor(gameState)
+    {
+        super(gameState);
+        this.maxDash = 15;
+    }
+
+    update(ctx)
+    {
+        if (this.state === playerStates.move) this.move();
+        else if (this.state === playerStates.fragileDash) this.dash();
+
+        this.shoot();
+
+        if (this.gameObject.x < 0)
+        {
+            this.gameObject.x = 0;
+            this.deltaX = 0;
+        }
+
+        if (this.gameObject.y < 0)
+        {
+            this.gameObject.y = 0;
+            this.deltaY = 0;
+        }
+
+        if (this.gameObject.x > 480)
+        {
+            this.gameObject.x = 480;
+            this.deltaX = 0;
+        }
+
+        if (this.gameObject.y > 480)
+        {
+            this.gameObject.y = 480;
+            this.deltaY = 0;
+        }
+
+        this.slowed = false;
+        for (let i = 0; i < this.gameState.gameData.enemies.length; i++)
+        {
+            if (this.gameObject.collidesWith(
+                this.gameState.gameData.enemies[i].gameObject
+            ) && this.gameState.gameData.enemies[i].canDamagePlayer(this))
+            {
+
+                if (this.gameState.gameData.enemies[i].type === enemyTypes.dashLine)
+                {
+                    this.slowed = true;
+                } else {
+                    this.takeDamage(this.gameState.gameData.enemies[i].damage);
+                    this.gameState.gameData.enemies[i].killEnemy();
+                }
+            }
+        }
+
+        if (this.health > 0)
+        {
+            if (this.health < this.maxHealth)
+            {
+                this.health += 0.002 * this.regenRate;
+            }
+            else this.health = this.maxHealth;
+        }
+
+        this.handleExit();
+
+        this.gameObject.update(ctx, this);
+    }
+
+    move()
+    {
+        if (dashPressed() && this.dashCount >= 1)
+        {
+            this.state = playerStates.fragileDash;
+            this.dashCount -= 1;
+            this.dashTimer = 0;
+            new DashEffect(this.gameState, this);
+            this.dash();
+            return;
+        } else {
+            this.dashTimer += 0.0075;
+            this.dashCount += this.dashTimer * 1 / (0.25 + Math.sqrt(
+                this.deltaX * this.deltaX + this.deltaY * this.deltaY
+            ));
+            if (this.dashCount > this.maxDash) this.dashCount = this.maxDash;
+        }
+
+        this.accelerate();
+
+        this.turn();
+        
+        this.deltaX += Math.cos(this.angle) * this.acceleration;
+        this.deltaY += Math.sin(this.angle) * this.acceleration;
+
+        let velocityMag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
+
+        if (this.maxSpeed !== undefined)
+        {
+            if (velocityMag > this.maxSpeed)
+            {
+                this.deltaX /= velocityMag / this.maxSpeed;
+                this.deltaY /= velocityMag / this.maxSpeed;
+            }
+        }
+
+        this.findDashDirection();
+
+        this.gameObject.x += this.deltaX * ((this.slowed) ? 0.2 : 1);
+        this.gameObject.y += this.deltaY * ((this.slowed) ? 0.2 : 1);
+    }
+
+    dash()
+    {
+        this.gameObject.x += (15 - this.dashTimer) * this.dashDirection.x;
+        this.gameObject.y += (15 - this.dashTimer) * this.dashDirection.y;
+        this.deltaX = 5 * this.dashDirection.x;
+        this.deltaY = 5 * this.dashDirection.y;
+
+        if (turnLeftPressed()) this.angle -= Math.PI / 20;
+        if (turnRightPressed()) this.angle += Math.PI / 20;
+
+        this.dashTimer += 1;
+        if (this.dashTimer >= 10)
+        {
+            if (this.gameObject.x < 0) {this.gameObject.x = 0; this.deltaX = 0;}
+            if (this.gameObject.y < 0) {this.gameObject.y = 0; this.deltaY = 0;}
+            if (this.gameObject.x > 480) {this.gameObject.x = 480; this.deltaX = 0;}
+            if (this.gameObject.y > 480) {this.gameObject.y = 480; this.deltaY = 0;}
+            this.state = playerStates.move;
+            this.dashTimer = 0;
+            this.deltaX = 5 * this.dashDirection.x;
+            this.deltaY = 5 * this.dashDirection.y;
+            this.findDashDirection();
+
+            if (dashPressed() && this.dashCount >= 1)
+            {
+                this.state = playerStates.fragileDash;
+                this.dashCount -= 1;
+                this.dashTimer = 0;
+                new DashEffect(this.gameState, this);
+            }
+        }
+    }
+
 }
 
 class MenuPlayer extends Player

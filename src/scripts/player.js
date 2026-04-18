@@ -995,7 +995,7 @@ class Mine extends Bullet
 {
     constructor(gameState, player)
     {
-        super(gameState, player)
+        super(gameState, player);
         this.counter = 0;
 
         let mag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);

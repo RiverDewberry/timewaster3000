@@ -1168,8 +1168,12 @@ class MeleeBullet extends Bullet
     {
         super(gameState, player);
 
+        this.player = player;
+
+        this.counter = 0;
+
         let mag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
-        let newMag = mag * 5;
+        let newMag = mag * 2;
 
         this.deltaX *= newMag * (1 / mag);
         this.deltaY *= newMag * (1 / mag);
@@ -1184,42 +1188,45 @@ class MeleeBullet extends Bullet
 
     update(ctx)
     {
-        let mag = Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY);
-        
-        let newMag = mag;
+        this.counter++;
 
-        newMag *= 0.5;
-
-        this.deltaX *= newMag * (1 / mag);
-        this.deltaY *= newMag * (1 / mag);
-
-        this.gameObject.x += mag;
-        this.gameObject.y += mag;
-        this.gameObject.width = newMag * 2;
-        this.gameObject.height = newMag * 2;
-        this.gameObject.x -= newMag;
-        this.gameObject.y -= newMag;
-
-        if (Math.sqrt(this.deltaX * this.deltaX + this.deltaY * this.deltaY) < 1)
+        if (this.counter > 15)
         {
             this.killBullet();
             return;
         }
 
-        this.gameObject.x += this.deltaX;
-        this.gameObject.y += this.deltaY;
-        
-        this.displayBullet.x += this.deltaX;
-        this.displayBullet.y += this.deltaY;
+        let xDirection = Math.cos(this.player.angle);
+        let yDirection = Math.sin(this.player.angle);
+        let directionScale = Math.max(Math.abs(xDirection), Math.abs(yDirection));
+        xDirection /= directionScale;
+        yDirection /= directionScale;
 
-        if ((this.gameObject.x < (-1 * this.gameObject.width)) ||
-            (this.gameObject.y < (-1 * this.gameObject.height)) ||
-            (this.gameObject.x > (this.gameObject.width + 500)) ||
-            (this.gameObject.y > (this.gameObject.height + 500))
-        )
-            this.killBullet();
+        this.deltaTotal = Math.sqrt(
+            this.deltaX * this.deltaX +
+            this.deltaY * this.deltaY
+        );
+
+        this.gameObject.x = this.player.gameObject.x + this.player.deltaX +
+            (0.5 + xDirection) * this.player.gameObject.width - this.deltaTotal;
+        this.gameObject.y = this.player.gameObject.y + this.player.deltaY +
+            (0.5 + yDirection) * this.player.gameObject.width - this.deltaTotal;
+        this.gameObject.width = this.deltaTotal * 2;
+        this.gameObject.height = this.deltaTotal * 2;        
 
         this.gameObject.update(ctx, this);
+    }
+
+    draw(ctx, data)
+    {
+        ctx.strokeStyle = "Lightgrey";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(
+            data.gameObject.x + 2,
+            data.gameObject.y + 2,
+            data.gameObject.width - 4,
+            data.gameObject.height - 4
+        );
     }
 }
 

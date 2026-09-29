@@ -12,3 +12,5 @@ were made such that this can run locally on a school managed Chromebook >:3
 3. press the shortcut "ctrl+o"
 4. find the file that you downloaded and double click on it
 5. bookmark the tab that the game is running on so that you can easily access this later
+
+Also available on Itch.io https://riverdewberry.itch.io/time-waster-3000

@@ -2,7 +2,7 @@
 
 The reason for some of the more "interesting" decisions made in the creation of this game
 (such as this thing being written in plain JS)
-were made such that this can run locally on a school managed Chromebook >:3
+were made such that this can run locally on a school managed Chromebook >:5
 
 ### How to run timewaster3000 on a Chromebook:
 (note: all you have to do is open the html file, this section is for people who have limited knowledge about computers)
